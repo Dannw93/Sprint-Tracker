@@ -205,23 +205,32 @@
 
                 <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 lg:hidden">
                     <nav className="flex justify-around items-center h-16">
-                         <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 w-1/2 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
-                            <Icon name="timer" size={24}/>
-                            <span className="text-xs font-semibold">Logger</span>
-                         </button>
-                         <div className="w-16 h-16"></div>
-                          <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 w-1/2 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
-                            <Icon name="calendar" size={24}/>
-                            <span className="text-xs font-semibold">Calendar</span>
-                         </button>
+                         <div className="w-1/3 flex justify-center">
+                            <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                <Icon name="timer" size={24}/>
+                                <span className="text-xs font-semibold">Logger</span>
+                            </button>
+                         </div>
+                         <div className="w-1/3 flex justify-center">
+                             <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg -mt-8 border-4 border-white">
+                                <Icon name="plus" size={32}/>
+                            </button>
+                         </div>
+                          <div className="w-1/3 flex justify-center">
+                            <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                <Icon name="calendar" size={24}/>
+                                <span className="text-xs font-semibold">Calendar</span>
+                            </button>
+                          </div>
                     </nav>
                 </footer>
-                <div className="fixed bottom-6 right-6 lg:hidden z-10">
+                
+                <div className="hidden lg:block fixed bottom-8 right-8">
                      <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg">
                         <Icon name="plus" size={32}/>
                     </button>
                 </div>
-                
+
                 {isCreateModalOpen && <SessionCreatorModal onCreateSession={handleCreateSession} onClose={() => setIsCreateModalOpen(false)} />}
             </div>
           );
