@@ -100,7 +100,6 @@
         function SprintDashboard() {
           const [sessions, setSessions] = useState([]);
           const [activeSessionId, setActiveSessionId] = useState(null);
-          const [selectedSessionsForChart, setSelectedSessionsForChart] = useState([]);
           const [isLoading, setIsLoading] = useState(true);
           const [view, setView] = useState('logger');
           const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -111,9 +110,8 @@
               const localData = localStorage.getItem('sprintSessions');
               const parsedData = localData ? JSON.parse(localData) : [];
               setSessions(parsedData);
-              if (parsedData.length > 0) {
-                  if(!activeSessionId) setActiveSessionId(parsedData[0].id);
-                  if(selectedSessionsForChart.length === 0) setSelectedSessionsForChart([parsedData[0].id]);
+              if (parsedData.length > 0 && !activeSessionId) {
+                  setActiveSessionId(parsedData[0].id);
               }
             } catch (e) { setSessions([]); }
             setIsLoading(false);
@@ -144,7 +142,6 @@
                  nextActiveId = remainingSessions[0].id;
             }
             setSessions(remainingSessions);
-            setSelectedSessionsForChart(prev => prev.filter(id => id !== sessionId));
             if(nextActiveId) {
                 setActiveSessionId(nextActiveId);
             } else if (remainingSessions.length === 0) {
@@ -179,7 +176,6 @@
           const MainContent = () => {
               switch(view) {
                   case 'calendar': return <CalendarPage sessions={sessions} onSessionSelect={handleSelectSession} setView={setView} />;
-                  case 'analytics': return <PerformanceAnalytics sessions={sessions} selectedSessionIds={selectedSessionsForChart} onToggleSelection={(id) => setSelectedSessionsForChart(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id])} />;
                   case 'logger':
                   default: 
                     return activeSession ? <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint}/> : <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-2xl shadow-sm"><Icon name="logIn" size={48} className="text-blue-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2><p className="text-gray-500">Create or select a session to start.</p></div>;
@@ -196,19 +192,31 @@
                     {isLoading ? <LoadingSpinner /> : <SessionList sessions={sessions} activeSessionId={activeSessionId} onSelectSession={handleSelectSession} onUpdate={handleUpdateSession} onDelete={handleDeleteSession} />}
                 </aside>
 
-                <main className="flex-1 p-4 lg:p-8 overflow-y-auto scrollbar-thin bg-white">
-                    <header className="flex justify-between items-center mb-6">
-                        <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 lg:hidden"><Icon name="menu" size={24} /></button>
-                         <div className="hidden lg:block w-10"></div>
-                        <div className="bg-gray-200 p-1 rounded-full flex space-x-1">
-                            <button onClick={() => setView('logger')} className={`px-4 py-1.5 text-sm sm:px-6 rounded-full font-semibold transition ${view === 'logger' ? 'bg-white shadow text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Logger</button>
-                            <button onClick={() => setView('calendar')} className={`px-4 py-1.5 text-sm sm:px-6 rounded-full font-semibold transition ${view === 'calendar' ? 'bg-white shadow text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Calendar</button>
-                            <button onClick={() => setView('analytics')} className={`px-4 py-1.5 text-sm sm:px-6 rounded-full font-semibold transition ${view === 'analytics' ? 'bg-white shadow text-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Analytics</button>
-                        </div>
-                        <button onClick={() => setIsCreateModalOpen(true)} className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"><Icon name="plus" size={24}/></button>
+                <main className="flex-1 p-4 lg:p-8 overflow-y-auto scrollbar-thin bg-white pb-24 lg:pb-8">
+                    <header className="flex justify-between items-center mb-6 lg:hidden">
+                        <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200"><Icon name="menu" size={24} /></button>
+                         <h1 className="text-xl font-semibold text-gray-800">Sprint Tracker</h1>
+                        <div className="w-10"></div>
                     </header>
                     <MainContent />
                 </main>
+
+                <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 lg:hidden">
+                    <nav className="flex justify-around items-center h-16">
+                         <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
+                            <Icon name="logIn" size={24}/>
+                            <span className="text-xs font-semibold">Logger</span>
+                         </button>
+                         <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-14 w-14 flex items-center justify-center shadow-lg -mt-8">
+                             <Icon name="plus" size={32}/>
+                         </button>
+                          <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
+                            <Icon name="check" size={24}/>
+                            <span className="text-xs font-semibold">Calendar</span>
+                         </button>
+                    </nav>
+                </footer>
+                
                 {isCreateModalOpen && <SessionCreatorModal onCreateSession={handleCreateSession} onClose={() => setIsCreateModalOpen(false)} />}
             </div>
           );
@@ -387,52 +395,6 @@
             return (<li className="group flex justify-between items-center bg-white p-4 rounded-xl transition-all border border-gray-200"><p className="font-semibold text-gray-800">{sprint.distance}m</p><div className="flex items-center gap-4"><span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{sprint.startType || 'Standing'}</span><p className="text-blue-600 text-lg font-mono">{sprint.time.toFixed(2)}s</p></div><div className="flex opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setIsEditing(true)} className="p-1 hover:text-gray-900"><Icon name="edit" size={16}/></button><button onClick={() => setConfirmDelete(true)} className="p-1 hover:text-red-500"><Icon name="trash2" size={16}/></button></div>{confirmDelete && <ConfirmationModal title="Delete Sprint?" message={`Permanently delete the ${sprint.distance}m sprint?`} onConfirm={() => onDelete(sprint)} onCancel={() => setConfirmDelete(false)} />}</li>);
         }
 
-        function PerformanceAnalytics({ sessions, selectedSessionIds, onToggleSelection }) {
-            const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = window.Recharts || {};
-
-            const chartData = useMemo(() => {
-                const dataMap = {};
-                const selected = sessions.filter(s => selectedSessionIds.includes(s.id));
-                
-                selected.forEach(session => {
-                    (session.sprints || []).forEach(sprint => {
-                        const { distance, time } = sprint;
-                        if(!dataMap[distance]) {
-                            dataMap[distance] = { distance };
-                        }
-                        dataMap[distance][session.name] = time;
-                    });
-                });
-
-                return Object.values(dataMap).sort((a,b) => a.distance - b.distance);
-            }, [sessions, selectedSessionIds]);
-            
-            const sessionNames = useMemo(() => sessions.filter(s => selectedSessionIds.includes(s.id)).map(s => s.name), [sessions, selectedSessionIds]);
-
-            const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#22c55e', '#14b8a6', '#f59e0b'];
-            
-            return (
-                <div className="bg-white p-4 sm:p-6 rounded-2xl">
-                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">Session Comparison</h2>
-                    <div className="mb-8"><h3 className="text-lg font-semibold mb-3 text-gray-700">Compare Sessions</h3><div className="flex flex-wrap gap-2 sm:gap-3">{sessions.map(s => <button key={s.id} onClick={() => onToggleSelection(s.id)} className={`px-3 py-1.5 text-sm rounded-full font-semibold transition flex items-center space-x-2 ${selectedSessionIds.includes(s.id) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{selectedSessionIds.includes(s.id) && <Icon name="check" size={16}/>}<span>{s.name}</span></button>)}</div></div>
-                    <div className="h-96 w-full">
-                        {chartData.length > 0 && sessionNames.length > 0 ? 
-                            <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                    <XAxis dataKey="distance" type="number" domain={['dataMin', 'dataMax']} label={{ value: 'Distance (m)', position: 'insideBottom', offset: -15, fill: '#6b7280' }} stroke="#9ca3af" tick={{ fill: '#6b7280' }}/><YAxis label={{ value: 'Time (s)', angle: -90, position: 'insideLeft', fill: '#6b7280', dx: -10 }} stroke="#9ca3af" tick={{ fill: '#6b7280' }}/>
-                                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }} labelStyle={{ fontWeight: 'bold', color: '#3b82f6' }}/>
-                                    <Legend wrapperStyle={{ paddingTop: '20px' }}/>
-                                    {sessionNames.map((name, i) => <Line key={name} type="monotone" dataKey={name} name={name} stroke={colors[i % colors.length]} strokeWidth={2} dot={{ r: 4, fill: colors[i % colors.length] }} activeDot={{ r: 8 }} connectNulls />)}
-                                </LineChart>
-                            </ResponsiveContainer> : 
-                            <div className="flex items-center justify-center h-full"><p className="text-gray-500">Select one or more sessions to compare.</p></div>
-                        }
-                    </div>
-                </div>
-            );
-        }
-        
         function ConfirmationModal({ title, message, onConfirm, onCancel }) {
             return (<div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center p-4 z-50"><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center"><Icon name="alertTriangle" size={48} className="mx-auto text-red-500 mb-4" /><h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3><p className="text-gray-500 mb-6">{message}</p><div className="flex justify-center space-x-4"><button onClick={onCancel} className="px-6 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 transition">Cancel</button><button onClick={onConfirm} className="px-6 py-2 rounded-lg font-semibold bg-red-600 hover:bg-red-700 text-white transition">Confirm</button></div></div></div>);
         }
