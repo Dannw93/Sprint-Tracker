@@ -80,7 +80,7 @@
                 onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setLogLevel,
             };
         } catch (e) {
-            console.warn("Could not load Firebase modules. The app will run in offline mode.", e);
+            console.warn("Could not load Firebase modules. The app requires a connection to run.", e);
             window.firebase = null; 
         }
     </script>
@@ -131,13 +131,13 @@
           const [user, setUser] = useState(null);
           const [db, setDb] = useState(null);
           const [isAuthReady, setIsAuthReady] = useState(false);
-          const [isOffline, setIsOffline] = useState(false);
+          const [initError, setInitError] = useState(null);
 
           useEffect(() => {
             const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
             const firebase = window.firebase;
             if (!firebase || !firebaseConfig || Object.keys(firebaseConfig).length === 0) {
-                setIsOffline(true);
+                setInitError("App configuration is missing. Cannot connect to services.");
                 setIsAuthReady(true);
                 return;
             }
@@ -160,21 +160,22 @@
               });
             } catch (error) {
               console.error("Firebase init error:", error);
-              setIsOffline(true);
+              setInitError("Failed to initialize backend services.");
               setIsAuthReady(true);
             }
           }, []);
 
           if (!isAuthReady) return <LoadingScreen />;
-          if (isOffline) return <SprintDashboard isOffline={true} />;
-          return (<div className="min-h-screen bg-gray-100 text-gray-800 font-sans">{user && db ? <SprintDashboard db={db} user={user} isOffline={false} /> : <AuthWall />}</div>);
+          if (initError) return <ErrorScreen message={initError} />;
+          return (<div className="min-h-screen bg-gray-100 text-gray-800 font-sans">{user && db ? <SprintDashboard db={db} user={user} /> : <AuthWall />}</div>);
         }
 
         function LoadingScreen() { return <div className="flex flex-col items-center justify-center h-screen bg-gray-100"><LoadingSpinner /><p className="text-xl text-gray-500 mt-4">Loading Sprint Tracker...</p></div>; }
+        function ErrorScreen({message}) { return <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4 text-center"><Icon name="alertTriangle" size={48} className="text-red-500 mb-4" /><h1 className="text-2xl font-bold text-gray-800 mb-2">Connection Error</h1><p className="text-gray-600">{message}</p></div>; }
         function AuthWall() { return <div className="flex flex-col items-center justify-center h-screen"><h1 className="text-3xl font-bold text-blue-600 mb-4">Sprint Tracker</h1><p className="text-gray-500">Connecting to services...</p><div className="mt-8"><LoadingSpinner /></div></div>; }
         function LoadingSpinner() { return <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>; }
 
-        function SprintDashboard({ db, user, isOffline }) {
+        function SprintDashboard({ db, user }) {
           const [sessions, setSessions] = useState([]);
           const [activeSessionId, setActiveSessionId] = useState(null);
           const [selectedSessions, setSelectedSessions] = useState([]);
@@ -184,17 +185,6 @@
           const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
           useEffect(() => {
-            if (isOffline) {
-              try {
-                const parsedData = JSON.parse(localStorage.getItem('sprintSessions') || '[]');
-                setSessions(parsedData);
-                if (parsedData.length > 0) {
-                    if(!activeSessionId) setActiveSessionId(parsedData[0].id);
-                    if(selectedSessions.length === 0) setSelectedSessions([parsedData[0].id]);
-                }
-              } catch (e) { setSessions([]); }
-              setIsLoading(false);
-            } else {
               if (!db || !user) return;
               const { collection, query, onSnapshot } = window.firebase;
               const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-sprint-tracker';
@@ -209,44 +199,31 @@
                 setIsLoading(false);
               }, (error) => { setIsLoading(false); });
               return () => unsubscribe();
-            }
-          }, [isOffline, db, user]);
-          
-          useEffect(() => { if (isOffline && !isLoading) { localStorage.setItem('sprintSessions', JSON.stringify(sessions)); }}, [sessions, isOffline, isLoading]);
+          }, [db, user]);
           
           const handleCreateSession = async (name) => {
-            const newSession = { name, date: new Date().toISOString(), sprints: [], id: Date.now().toString() };
-             if (isOffline) { setSessions(prev => [newSession, ...prev].sort((a,b) => new Date(b.date) - new Date(a.date))); } 
-             else {
-                const { collection, addDoc } = window.firebase;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-sprint-tracker';
-                const docRef = await addDoc(collection(db, `artifacts/${appId}/users/${user.uid}/sessions`), {...newSession, userId: user.uid});
-                newSession.id = docRef.id;
-            }
-            setActiveSessionId(newSession.id);
-            setSelectedSessions(prev => [newSession.id, ...prev].filter((v,i,a) => a.indexOf(v) === i));
+            const { collection, addDoc } = window.firebase;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-sprint-tracker';
+            const newSession = { name, date: new Date().toISOString(), sprints: [], userId: user.uid };
+            const docRef = await addDoc(collection(db, `artifacts/${appId}/users/${user.uid}/sessions`), newSession);
+            setActiveSessionId(docRef.id);
+            setSelectedSessions(prev => [docRef.id, ...prev].filter((v,i,a) => a.indexOf(v) === i));
             setView('logger');
             setIsCreateModalOpen(false);
           };
 
           const handleUpdateSession = async (sessionId, updatedData) => {
-            if(isOffline) { setSessions(prev => prev.map(s => s.id === sessionId ? {...s, ...updatedData} : s)); } 
-            else {
-                const { doc, updateDoc } = window.firebase;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-sprint-tracker';
-                await updateDoc(doc(db, `artifacts/${appId}/users/${user.uid}/sessions`, sessionId), updatedData);
-            }
+            const { doc, updateDoc } = window.firebase;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-sprint-tracker';
+            await updateDoc(doc(db, `artifacts/${appId}/users/${user.uid}/sessions`, sessionId), updatedData);
           };
 
           const handleDeleteSession = async (sessionId) => {
-             if (isOffline) { setSessions(prev => prev.filter(s => s.id !== sessionId)); } 
-             else {
-                const { doc, deleteDoc } = window.firebase;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-sprint-tracker';
-                await deleteDoc(doc(db, `artifacts/${appId}/users/${user.uid}/sessions`, sessionId));
-            }
-             if (activeSessionId === sessionId) setActiveSessionId(sessions.find(s => s.id !== sessionId)?.id || null);
-             setSelectedSessions(prev => prev.filter(id => id !== sessionId));
+            const { doc, deleteDoc } = window.firebase;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-sprint-tracker';
+            await deleteDoc(doc(db, `artifacts/${appId}/users/${user.uid}/sessions`, sessionId));
+            if (activeSessionId === sessionId) setActiveSessionId(sessions.find(s => s.id !== sessionId)?.id || null);
+            setSelectedSessions(prev => prev.filter(id => id !== sessionId));
           };
 
           const handleAddSprint = (sprintData) => {
@@ -289,7 +266,7 @@
                 <aside className={`fixed top-0 left-0 h-full w-4/5 md:w-1/3 bg-gray-50/80 backdrop-blur-xl border-r border-gray-200 p-4 lg:p-6 flex flex-col scrollbar-thin transform transition-transform duration-300 ease-in-out z-20 lg:relative lg:w-1/3 lg:translate-x-0 lg:bg-gray-50 lg:border-r lg:border-gray-200 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                     <h1 className="text-2xl font-bold text-gray-900 mb-6">Sprint Tracker</h1>
                     {isLoading ? <LoadingSpinner /> : <SessionList sessions={sessions} activeSessionId={activeSessionId} onSelectSession={handleSelectSession} onUpdate={handleUpdateSession} onDelete={handleDeleteSession} />}
-                    <div className="mt-auto pt-4 text-xs text-gray-400"><p>{isOffline ? "Offline Mode" : `User ID: ${user?.uid}`}</p></div>
+                    <div className="mt-auto pt-4 text-xs text-gray-400"><p>User ID: {user?.uid}</p></div>
                 </aside>
 
                 <main className="flex-1 p-4 lg:p-8 overflow-y-auto scrollbar-thin bg-white">
