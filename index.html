@@ -100,7 +100,7 @@
         function SprintDashboard() {
           const [sessions, setSessions] = useState([]);
           const [activeSessionId, setActiveSessionId] = useState(null);
-          const [selectedSessions, setSelectedSessions] = useState([]);
+          const [selectedSessionsForChart, setSelectedSessionsForChart] = useState([]);
           const [isLoading, setIsLoading] = useState(true);
           const [view, setView] = useState('logger');
           const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -113,7 +113,7 @@
               setSessions(parsedData);
               if (parsedData.length > 0) {
                   if(!activeSessionId) setActiveSessionId(parsedData[0].id);
-                  if(selectedSessions.length === 0) setSelectedSessions([parsedData[0].id]);
+                  if(selectedSessionsForChart.length === 0) setSelectedSessionsForChart([parsedData[0].id]);
               }
             } catch (e) { setSessions([]); }
             setIsLoading(false);
@@ -125,11 +125,10 @@
               }
           }, [sessions, isLoading]);
           
-          const handleCreateSession = (name) => {
-            const newSession = { name, date: new Date().toISOString(), sprints: [], id: Date.now().toString() };
+          const handleCreateSession = (name, date) => {
+            const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString() };
             setSessions(prev => [newSession, ...prev].sort((a,b) => new Date(b.date) - new Date(a.date)));
             setActiveSessionId(newSession.id);
-            setSelectedSessions(prev => [newSession.id, ...prev].filter((v,i,a) => a.indexOf(v) === i));
             setView('logger');
             setIsCreateModalOpen(false);
           };
@@ -139,9 +138,18 @@
           };
 
           const handleDeleteSession = (sessionId) => {
-            setSessions(prev => prev.filter(s => s.id !== sessionId));
-            if (activeSessionId === sessionId) setActiveSessionId(sessions.find(s => s.id !== sessionId)?.id || null);
-            setSelectedSessions(prev => prev.filter(id => id !== sessionId));
+            let nextActiveId = null;
+            const remainingSessions = sessions.filter(s => s.id !== sessionId);
+            if (activeSessionId === sessionId && remainingSessions.length > 0) {
+                 nextActiveId = remainingSessions[0].id;
+            }
+            setSessions(remainingSessions);
+            setSelectedSessionsForChart(prev => prev.filter(id => id !== sessionId));
+            if(nextActiveId) {
+                setActiveSessionId(nextActiveId);
+            } else if (remainingSessions.length === 0) {
+                 setActiveSessionId(null);
+            }
           };
 
           const handleAddSprint = (sprintData) => {
@@ -171,7 +179,7 @@
           const MainContent = () => {
               switch(view) {
                   case 'calendar': return <CalendarPage sessions={sessions} onSessionSelect={handleSelectSession} setView={setView} />;
-                  case 'analytics': return <PerformanceAnalytics sessions={sessions} selectedSessionIds={selectedSessions} onToggleSelection={(id) => setSelectedSessions(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id])} />;
+                  case 'analytics': return <PerformanceAnalytics sessions={sessions} selectedSessionIds={selectedSessionsForChart} onToggleSelection={(id) => setSelectedSessionsForChart(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id])} />;
                   case 'logger':
                   default: 
                     return activeSession ? <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint}/> : <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-2xl shadow-sm"><Icon name="logIn" size={48} className="text-blue-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2><p className="text-gray-500">Create or select a session to start.</p></div>;
@@ -208,12 +216,23 @@
 
         function SessionCreatorModal({ onCreateSession, onClose }) {
           const [name, setName] = useState('');
-          const handleSubmit = (e) => { e.preventDefault(); if(name.trim()){ onCreateSession(name.trim()); }};
+          const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+          const handleSubmit = (e) => { e.preventDefault(); if(name.trim()){ onCreateSession(name.trim(), date); }};
           return (<div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 w-full max-w-md">
                 <form onSubmit={handleSubmit}>
                     <h3 className="text-xl font-bold mb-4 text-gray-900">Create New Session</h3>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Velocity Day" className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    <div className="space-y-4">
+                        <div>
+                           <label htmlFor="session-name" className="block text-sm font-medium text-gray-700 mb-1">Session Name</label>
+                           <input id="session-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Velocity Day" className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        </div>
+                         <div>
+                           <label htmlFor="session-date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                           <input id="session-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        </div>
+                    </div>
                     <div className="flex justify-end space-x-4 mt-6">
                         <button type="button" onClick={onClose} className="px-6 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 transition text-gray-800">Cancel</button>
                         <button type="submit" className="px-6 py-2 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 transition text-white">Create</button>
@@ -284,7 +303,7 @@
             return (
                 <div className="bg-white p-4 rounded-2xl border border-gray-200">
                     <div className="flex justify-between items-center mb-4"><button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-gray-100 transition"><Icon name="chevronLeft" size={20} /></button><h3 className="font-bold text-lg text-gray-800">{new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentDate)}</h3><button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-gray-100 transition"><Icon name="chevronRight" size={20} /></button></div>
-                    <div className="grid grid-cols-7 gap-2 text-center text-xs text-gray-500">{weekDays.map((day, index) => <div key={index} className="font-semibold">{day}</div>)}</div>
+                    <div className="grid grid-cols-7 gap-2 text-center text-xs text-gray-500">{weekDays.map((day, index) => <div key={index} className="font-semibold h-9 w-9 flex justify-center items-center">{day}</div>)}</div>
                     <div className="grid grid-cols-7 gap-2 mt-2">
                         {blanks.map((_, i) => <div key={`b-${i}`} />)}
                         {days.map(day => {
@@ -303,12 +322,35 @@
         function SprintLogger({ session, onAddSprint, onUpdateSprint, onDeleteSprint }) {
           const [distance, setDistance] = useState(100);
           const [time, setTime] = useState('');
-          const handleSubmit = (e) => { e.preventDefault(); const timeValue = parseFloat(time); if (!isNaN(timeValue) && timeValue > 0) { onAddSprint({ id: Date.now(), distance: Number(distance), time: timeValue }); setTime(''); } };
+          const [startType, setStartType] = useState('Standing');
+          
+          const handleSubmit = (e) => { 
+              e.preventDefault(); 
+              const timeValue = parseFloat(time); 
+              if (!isNaN(timeValue) && timeValue > 0) { 
+                  onAddSprint({ id: Date.now(), distance: Number(distance), time: timeValue, startType: startType }); 
+                  setTime(''); 
+              } 
+          };
           return (
             <div className="bg-white p-4 sm:p-6 rounded-2xl">
               <h2 className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900">{session.name}</h2>
               <p className="text-sm text-gray-500 mb-8">Date: {new Date(session.date).toLocaleDateString()}</p>
-              <form onSubmit={handleSubmit} className="mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl"><div className="grid md:grid-cols-2 gap-6 items-center"><div><label htmlFor="distance" className="block text-lg font-medium mb-2 text-gray-700">Distance: <span className="font-bold text-blue-600">{distance}m</span></label><input id="distance" type="range" min="20" max="400" step="10" value={distance} onChange={(e) => setDistance(e.target.value)} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-thumb"/></div><div className="flex items-end space-x-4"><div className="flex-grow"><label htmlFor="time" className="block text-lg font-medium mb-2 text-gray-700">Time (s)</label><input id="time" type="number" step="0.01" value={time} onChange={(e) => setTime(e.target.value)} placeholder="e.g., 12.54" className="w-full bg-white text-gray-900 p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none" required/></div><button type="submit" className="h-[52px] px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition flex items-center justify-center"><Icon name="plus" size={24} /></button></div></div></form>
+              <form onSubmit={handleSubmit} className="mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl"><div className="grid md:grid-cols-2 gap-6 items-center"><div><label htmlFor="distance" className="block text-lg font-medium mb-2 text-gray-700">Distance: <span className="font-bold text-blue-600">{distance}m</span></label><input id="distance" type="range" min="20" max="400" step="10" value={distance} onChange={(e) => setDistance(e.target.value)} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-thumb"/></div><div className="flex items-end space-x-4"><div className="flex-grow"><label htmlFor="time" className="block text-lg font-medium mb-2 text-gray-700">Time (s)</label><input id="time" type="number" step="0.01" value={time} onChange={(e) => setTime(e.target.value)} placeholder="e.g., 12.54" className="w-full bg-white text-gray-900 p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none" required/></div><button type="submit" className="h-[52px] px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition flex items-center justify-center"><Icon name="plus" size={24} /></button></div></div>
+                   <div className="mt-4">
+                        <span className="block text-lg font-medium mb-2 text-gray-700">Start Type</span>
+                        <div className="flex items-center space-x-6">
+                           <label className="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="startType" value="Standing" checked={startType === 'Standing'} onChange={() => setStartType('Standing')} className="form-radio h-4 w-4 text-blue-600"/>
+                                <span className="text-gray-700">Standing</span>
+                           </label>
+                            <label className="flex items-center space-x-2 cursor-pointer">
+                                <input type="radio" name="startType" value="Rolling" checked={startType === 'Rolling'} onChange={() => setStartType('Rolling')} className="form-radio h-4 w-4 text-blue-600"/>
+                                <span className="text-gray-700">Rolling</span>
+                           </label>
+                        </div>
+                    </div>
+              </form>
               <div><h3 className="text-xl font-bold mb-4 text-gray-800">Logged Sprints</h3><div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin">{(session.sprints || []).length > 0 ? <ul className="space-y-3">{[...session.sprints].sort((a,b) => b.id - a.id).map(sprint => <SprintListItem key={sprint.id} sprint={sprint} onUpdate={onUpdateSprint} onDelete={onDeleteSprint} />)}</ul> : <p className="text-gray-500 text-center py-4">No sprints logged yet.</p>}</div></div>
             </div>
           );
@@ -317,23 +359,75 @@
         function SprintListItem({ sprint, onUpdate, onDelete }) {
             const [isEditing, setIsEditing] = useState(false);
             const [confirmDelete, setConfirmDelete] = useState(false);
-            const [editData, setEditData] = useState({ distance: sprint.distance, time: sprint.time });
-            const handleSave = () => { const dist = parseInt(editData.distance, 10); const time = parseFloat(editData.time); if (!isNaN(dist) && !isNaN(time) && dist > 0 && time > 0) { onUpdate({ ...sprint, distance: dist, time: time }); setIsEditing(false); } };
-            if (isEditing) { return (<li className="flex justify-between items-center bg-blue-50 p-3 rounded-lg"><div className="flex items-center gap-2"><input type="number" value={editData.distance} onChange={e => setEditData({...editData, distance: e.target.value})} className="w-20 bg-white p-1 rounded"/><span>m</span></div><div className="flex items-center gap-2"><input type="number" step="0.01" value={editData.time} onChange={e => setEditData({...editData, time: e.target.value})} className="w-24 bg-white p-1 rounded"/><span>s</span></div><div className="flex gap-2"><button onClick={handleSave} className="p-1 hover:text-green-500"><Icon name="save" size={16}/></button><button onClick={() => setIsEditing(false)} className="p-1 hover:text-red-500"><Icon name="x" size={16}/></button></div></li>); }
-            return (<li className="group flex justify-between items-center bg-white p-4 rounded-xl transition-all border border-gray-200"><p className="font-semibold text-gray-800">{sprint.distance}m</p><p className="text-blue-600 text-lg font-mono">{sprint.time.toFixed(2)}s</p><div className="flex opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setIsEditing(true)} className="p-1 hover:text-gray-900"><Icon name="edit" size={16}/></button><button onClick={() => setConfirmDelete(true)} className="p-1 hover:text-red-500"><Icon name="trash2" size={16}/></button></div>{confirmDelete && <ConfirmationModal title="Delete Sprint?" message={`Permanently delete the ${sprint.distance}m sprint?`} onConfirm={() => onDelete(sprint)} onCancel={() => setConfirmDelete(false)} />}</li>);
+            const [editData, setEditData] = useState({ distance: sprint.distance, time: sprint.time, startType: sprint.startType || 'Standing' });
+            const handleSave = () => { const dist = parseInt(editData.distance, 10); const time = parseFloat(editData.time); if (!isNaN(dist) && !isNaN(time) && dist > 0 && time > 0) { onUpdate({ ...sprint, distance: dist, time: time, startType: editData.startType }); setIsEditing(false); } };
+            if (isEditing) { 
+                return (
+                    <li className="bg-blue-50 p-3 rounded-lg space-y-3">
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2"><input type="number" value={editData.distance} onChange={e => setEditData({...editData, distance: e.target.value})} className="w-20 bg-white p-1 rounded border border-gray-300"/><span>m</span></div>
+                            <div className="flex items-center gap-2"><input type="number" step="0.01" value={editData.time} onChange={e => setEditData({...editData, time: e.target.value})} className="w-24 bg-white p-1 rounded border border-gray-300"/><span>s</span></div>
+                        </div>
+                         <div className="flex justify-between items-center">
+                            <div className="flex items-center space-x-4 text-sm">
+                               <label className="flex items-center space-x-1 cursor-pointer">
+                                    <input type="radio" name={`startType-${sprint.id}`} value="Standing" checked={editData.startType === 'Standing'} onChange={e => setEditData({...editData, startType: e.target.value})} className="form-radio h-4 w-4 text-blue-600"/>
+                                    <span>S</span>
+                               </label>
+                                <label className="flex items-center space-x-1 cursor-pointer">
+                                    <input type="radio" name={`startType-${sprint.id}`} value="Rolling" checked={editData.startType === 'Rolling'} onChange={e => setEditData({...editData, startType: e.target.value})} className="form-radio h-4 w-4 text-blue-600"/>
+                                    <span>R</span>
+                               </label>
+                            </div>
+                            <div className="flex gap-2"><button onClick={handleSave} className="p-1 hover:text-green-500"><Icon name="save" size={16}/></button><button onClick={() => setIsEditing(false)} className="p-1 hover:text-red-500"><Icon name="x" size={16}/></button></div>
+                        </div>
+                    </li>
+                ); 
+            }
+            return (<li className="group flex justify-between items-center bg-white p-4 rounded-xl transition-all border border-gray-200"><p className="font-semibold text-gray-800">{sprint.distance}m</p><div className="flex items-center gap-4"><span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{sprint.startType || 'Standing'}</span><p className="text-blue-600 text-lg font-mono">{sprint.time.toFixed(2)}s</p></div><div className="flex opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setIsEditing(true)} className="p-1 hover:text-gray-900"><Icon name="edit" size={16}/></button><button onClick={() => setConfirmDelete(true)} className="p-1 hover:text-red-500"><Icon name="trash2" size={16}/></button></div>{confirmDelete && <ConfirmationModal title="Delete Sprint?" message={`Permanently delete the ${sprint.distance}m sprint?`} onConfirm={() => onDelete(sprint)} onCancel={() => setConfirmDelete(false)} />}</li>);
         }
 
         function PerformanceAnalytics({ sessions, selectedSessionIds, onToggleSelection }) {
             const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = window.Recharts || {};
-            if (!LineChart) { return (<div className="bg-white p-6 rounded-2xl"><h2 className="text-2xl font-bold mb-4 text-gray-900">Performance Analytics</h2><div className="h-96 w-full flex items-center justify-center"><LoadingSpinner /><p className="ml-4">Loading Chart Library...</p></div></div>); }
-            const chartData = sessions.filter(s => selectedSessionIds.includes(s.id)).map(session => ({ name: session.name, data: (session.sprints || []).map(sp => ({ distance: sp.distance, time: sp.time })).sort((a,b) => a.distance - b.distance)}));
+
+            const chartData = useMemo(() => {
+                const dataMap = {};
+                const selected = sessions.filter(s => selectedSessionIds.includes(s.id));
+                
+                selected.forEach(session => {
+                    (session.sprints || []).forEach(sprint => {
+                        const { distance, time } = sprint;
+                        if(!dataMap[distance]) {
+                            dataMap[distance] = { distance };
+                        }
+                        dataMap[distance][session.name] = time;
+                    });
+                });
+
+                return Object.values(dataMap).sort((a,b) => a.distance - b.distance);
+            }, [sessions, selectedSessionIds]);
+            
+            const sessionNames = useMemo(() => sessions.filter(s => selectedSessionIds.includes(s.id)).map(s => s.name), [sessions, selectedSessionIds]);
+
             const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#22c55e', '#14b8a6', '#f59e0b'];
+            
             return (
-                <div className="space-y-8">
-                    <div className="bg-white p-4 sm:p-6 rounded-2xl">
-                        <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">Performance Analytics</h2>
-                        <div className="mb-8"><h3 className="text-lg font-semibold mb-3 text-gray-700">Compare Sessions</h3><div className="flex flex-wrap gap-2 sm:gap-3">{sessions.map(s => <button key={s.id} onClick={() => onToggleSelection(s.id)} className={`px-3 py-1.5 text-sm rounded-full font-semibold transition flex items-center space-x-2 ${selectedSessionIds.includes(s.id) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{selectedSessionIds.includes(s.id) && <Icon name="check" size={16}/>}<span>{s.name}</span></button>)}</div></div>
-                        <div className="h-96 w-full">{chartData.length > 0 ? <ResponsiveContainer width="100%" height="100%"><LineChart margin={{ top: 5, right: 20, left: -10, bottom: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /><XAxis dataKey="distance" type="number" domain={['dataMin', 'dataMax']} label={{ value: 'Distance (m)', position: 'insideBottom', offset: -15, fill: '#6b7280' }} stroke="#9ca3af" tick={{ fill: '#6b7280' }}/><YAxis label={{ value: 'Time (s)', angle: -90, position: 'insideLeft', fill: '#6b7280', dx: -10 }} stroke="#9ca3af" tick={{ fill: '#6b7280' }}/><Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }} labelStyle={{ fontWeight: 'bold', color: '#3b82f6' }}/><Legend wrapperStyle={{ paddingTop: '20px' }}/>{chartData.map((series, i) => <Line key={series.name} type="monotone" data={series.data} dataKey="time" name={series.name} stroke={colors[i % colors.length]} strokeWidth={2} dot={{ r: 4, fill: colors[i % colors.length] }} activeDot={{ r: 8 }}/>)}</LineChart></ResponsiveContainer> : <div className="flex items-center justify-center h-full"><p className="text-gray-500">Select sessions to see the chart.</p></div>}</div>
+                <div className="bg-white p-4 sm:p-6 rounded-2xl">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900">Session Comparison</h2>
+                    <div className="mb-8"><h3 className="text-lg font-semibold mb-3 text-gray-700">Compare Sessions</h3><div className="flex flex-wrap gap-2 sm:gap-3">{sessions.map(s => <button key={s.id} onClick={() => onToggleSelection(s.id)} className={`px-3 py-1.5 text-sm rounded-full font-semibold transition flex items-center space-x-2 ${selectedSessionIds.includes(s.id) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{selectedSessionIds.includes(s.id) && <Icon name="check" size={16}/>}<span>{s.name}</span></button>)}</div></div>
+                    <div className="h-96 w-full">
+                        {chartData.length > 0 && sessionNames.length > 0 ? 
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                    <XAxis dataKey="distance" type="number" domain={['dataMin', 'dataMax']} label={{ value: 'Distance (m)', position: 'insideBottom', offset: -15, fill: '#6b7280' }} stroke="#9ca3af" tick={{ fill: '#6b7280' }}/><YAxis label={{ value: 'Time (s)', angle: -90, position: 'insideLeft', fill: '#6b7280', dx: -10 }} stroke="#9ca3af" tick={{ fill: '#6b7280' }}/>
+                                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e5e7eb', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }} labelStyle={{ fontWeight: 'bold', color: '#3b82f6' }}/>
+                                    <Legend wrapperStyle={{ paddingTop: '20px' }}/>
+                                    {sessionNames.map((name, i) => <Line key={name} type="monotone" dataKey={name} name={name} stroke={colors[i % colors.length]} strokeWidth={2} dot={{ r: 4, fill: colors[i % colors.length] }} activeDot={{ r: 8 }} connectNulls />)}
+                                </LineChart>
+                            </ResponsiveContainer> : 
+                            <div className="flex items-center justify-center h-full"><p className="text-gray-500">Select one or more sessions to compare.</p></div>
+                        }
                     </div>
                 </div>
             );
@@ -343,7 +437,9 @@
             return (<div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center p-4 z-50"><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center"><Icon name="alertTriangle" size={48} className="mx-auto text-red-500 mb-4" /><h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3><p className="text-gray-500 mb-6">{message}</p><div className="flex justify-center space-x-4"><button onClick={onCancel} className="px-6 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 transition">Cancel</button><button onClick={onConfirm} className="px-6 py-2 rounded-lg font-semibold bg-red-600 hover:bg-red-700 text-white transition">Confirm</button></div></div></div>);
         }
         
-        ReactDOM.render(<App />, document.getElementById('root'));
+        window.onload = function() {
+            ReactDOM.render(<App />, document.getElementById('root'));
+        }
     </script>
 </body>
 </html>
