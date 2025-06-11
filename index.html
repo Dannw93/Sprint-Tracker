@@ -77,6 +77,8 @@
                 check: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><polyline points="20 6 9 17 4 12"></polyline></svg>,
                 x: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
                 menu: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>,
+                timer: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
+                calendar: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>,
                 logIn: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>,
                 chevronDown: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><polyline points="6 9 12 15 18 9"></polyline></svg>,
                 chevronUp: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><polyline points="18 15 12 9 6 15"></polyline></svg>,
@@ -178,7 +180,7 @@
                   case 'calendar': return <CalendarPage sessions={sessions} onSessionSelect={handleSelectSession} setView={setView} />;
                   case 'logger':
                   default: 
-                    return activeSession ? <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint}/> : <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-2xl shadow-sm"><Icon name="logIn" size={48} className="text-blue-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2><p className="text-gray-500">Create or select a session to start.</p></div>;
+                    return activeSession ? <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} sessions={sessions} /> : <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-2xl shadow-sm"><Icon name="logIn" size={48} className="text-blue-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2><p className="text-gray-500">Create or select a session to start.</p></div>;
               }
           }
 
@@ -203,19 +205,22 @@
 
                 <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 lg:hidden">
                     <nav className="flex justify-around items-center h-16">
-                         <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
-                            <Icon name="logIn" size={24}/>
+                         <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 w-1/2 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
+                            <Icon name="timer" size={24}/>
                             <span className="text-xs font-semibold">Logger</span>
                          </button>
-                         <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-14 w-14 flex items-center justify-center shadow-lg -mt-8">
-                             <Icon name="plus" size={32}/>
-                         </button>
-                          <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
-                            <Icon name="check" size={24}/>
+                         <div className="w-16 h-16"></div>
+                          <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 w-1/2 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
+                            <Icon name="calendar" size={24}/>
                             <span className="text-xs font-semibold">Calendar</span>
                          </button>
                     </nav>
                 </footer>
+                <div className="fixed bottom-6 right-6 lg:hidden z-10">
+                     <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg">
+                        <Icon name="plus" size={32}/>
+                    </button>
+                </div>
                 
                 {isCreateModalOpen && <SessionCreatorModal onCreateSession={handleCreateSession} onClose={() => setIsCreateModalOpen(false)} />}
             </div>
@@ -327,7 +332,7 @@
             );
         }
 
-        function SprintLogger({ session, onAddSprint, onUpdateSprint, onDeleteSprint }) {
+        function SprintLogger({ session, sessions, onAddSprint, onUpdateSprint, onDeleteSprint }) {
           const [distance, setDistance] = useState(100);
           const [time, setTime] = useState('');
           const [startType, setStartType] = useState('Standing');
@@ -360,6 +365,7 @@
                     </div>
               </form>
               <div><h3 className="text-xl font-bold mb-4 text-gray-800">Logged Sprints</h3><div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin">{(session.sprints || []).length > 0 ? <ul className="space-y-3">{[...session.sprints].sort((a,b) => b.id - a.id).map(sprint => <SprintListItem key={sprint.id} sprint={sprint} onUpdate={onUpdateSprint} onDelete={onDeleteSprint} />)}</ul> : <p className="text-gray-500 text-center py-4">No sprints logged yet.</p>}</div></div>
+              <PersonalBests sessions={sessions} />
             </div>
           );
         }
@@ -393,6 +399,36 @@
                 ); 
             }
             return (<li className="group flex justify-between items-center bg-white p-4 rounded-xl transition-all border border-gray-200"><p className="font-semibold text-gray-800">{sprint.distance}m</p><div className="flex items-center gap-4"><span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{sprint.startType || 'Standing'}</span><p className="text-blue-600 text-lg font-mono">{sprint.time.toFixed(2)}s</p></div><div className="flex opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setIsEditing(true)} className="p-1 hover:text-gray-900"><Icon name="edit" size={16}/></button><button onClick={() => setConfirmDelete(true)} className="p-1 hover:text-red-500"><Icon name="trash2" size={16}/></button></div>{confirmDelete && <ConfirmationModal title="Delete Sprint?" message={`Permanently delete the ${sprint.distance}m sprint?`} onConfirm={() => onDelete(sprint)} onCancel={() => setConfirmDelete(false)} />}</li>);
+        }
+
+        function PersonalBests({ sessions }) {
+            const personalBests = useMemo(() => {
+                const allSprints = sessions.flatMap(s => s.sprints || []);
+                const bests = {};
+                allSprints.forEach(sprint => {
+                    const key = `${sprint.distance}m-${sprint.startType}`;
+                    if (!bests[key] || sprint.time < bests[key].time) {
+                        bests[key] = sprint;
+                    }
+                });
+                return Object.values(bests).sort((a,b) => a.distance - b.distance);
+            }, [sessions]);
+
+            if (personalBests.length === 0) return null;
+
+            return (
+                <div className="mt-8">
+                    <h3 className="text-xl font-bold mb-4 text-gray-800">Personal Bests</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {personalBests.map(pb => (
+                             <div key={pb.id} className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl">
+                                 <p className="font-semibold text-yellow-800">{pb.distance}m ({pb.startType})</p>
+                                 <p className="text-2xl font-bold text-yellow-900">{pb.time.toFixed(2)}s</p>
+                             </div>
+                        ))}
+                    </div>
+                </div>
+            );
         }
 
         function ConfirmationModal({ title, message, onConfirm, onCancel }) {
