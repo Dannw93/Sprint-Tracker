@@ -70,99 +70,112 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // A list of UK athletic tracks. In a real-world app, this might come from an API.
+        // A list of UK athletic tracks with coordinates for the weather API.
         const ukAthleticTracks = [
-            "Abbots Bromley School Track", "Aberdare Sobell Sports Stadium", "Aberdeen Balgownie Pavilion Track", "Aberdeen Chris Anderson Stadium",
-            "Aberystwyth University of Wales Track", "Abingdon Dalton Barracks Track", "Abingdon Tilsley Park Track", "Accrington The Hyndburn Athletic Club",
-            "Acton The Japanese School Track", "Addlestone St. George's College Track", "Airdrie Airdrie Leisure Centre Track", "Alconbury RAF Alconbury Track",
-            "Aldershot Military Stadium", "Amble Unknown track name", "Ammanford Amman Valley Comprehensive School Track", "Ampleforth Ampleforth College Track",
-            "Andover Charlton Athletic Track", "Annan Everholm Athletics Track", "Antrim Antrim Stadium", "Ascot St Mary's School Track",
-            "Ashford The Julie Rose Stadium", "Ashton-under-Lyne Richmond Park Athletics Stadium", "Ayr Dam Park Stadium", "Banbury Drayton School Athletics Track",
-            "Bangor Ballykillaire Sports Centre Track", "Bangor Treborth Athletics Track", "Barbican Holmes Place Barbican Indoor Track", "Bargoed Bargoed Stadium",
-            "Barlborough Barlborough Hall School Track", "Barnard Castle Teesdale School Track", "Barnes Barn Elms Athletics Track", "Barnes St. Paul's School Track",
-            "Barrow-in-Furness Park Vale Sports Stadium", "Barry Jenner Park Athletic Stadium", "Basildon Gloucester Park Arena", "Basingstoke Down Grange Track",
-            "Bath Kingswood School Track", "Bath University of Bath Track", "Bathgate Bathgate Sports Centre Track", "Battersea Millennium Arena, Battersea Park",
-            "Beachley Beachley Barracks Track", "Bebington The Oval Wirral", "Bedford Athletic Stadium", "Bedlington Bedlingtonshire Community High School Track",
-            "Beith Unknown track name", "Belfast Aircraft Park Track", "Belfast Belfast City Council Mary Peters Track", "Belfast Hammer Complex Track",
-            "Belfast Paisley Park Track", "Belfast St. Mary's Christian Brothers Grammar School Track", "Belfast Trench House Track", "Berry Hill Royal Forest of Dean College Track",
-            "Billingham Central Avenue Stadium", "Bingham Bingham Leisure Centre Track", "Birmingham Alexander Stadium", "Birmingham Fox Hollies Leisure Centre Track",
-            "Birmingham Holloway Head Playing Field Track", "Birmingham King Edward's School Track", "Birmingham National Indoor Arena", "Birmingham University of Birmingham Track",
-            "Bishop Auckland Bishop Auckland College Track", "Bishopbriggs Huntershill Recreation Ground Track", "Blackburn Witton Park Athletics Track", "Blackpool Stanley Park Athletics Arena",
-            "Blandford Forum Blandford Camp Track", "Blaydon Blaydon Comprehensive School (formerly) Track", "Blyth Unknown track name", "Bolton Leverhulme Park Athletics Stadium",
-            "Boreham New Hall School Track", "Boston Finnforest Boston Arena", "Bournemouth King's Park Athletics Centre", "Bow Common St. Pauls Way Community School Track",
-            "Bracknell John Nike Athletics Stadium", "Bradford Horsfall Stadium", "Braintree The Tabor Science College Track", "Bramley Unknown track name",
-            "Brecon Penlan Athletics Track", "Brentwood School Track", "Bridge of Don Barracks Track", "Bridgend Athletic Club Track", "Bridgwater Blake School Track",
-            "Brighton Withdean Stadium", "Bristol Whitehall Athletics Arena", "Brixworth Pitsford School Track", "Broadstairs The Charles Dickens School Track",
-            "Bromley Norman Park Athletics Track", "Bromsgrove Ryland Centre Track", "Bruton King's School Track", "Buckie Buckie High School Track",
-            "Bungay High School Track", "Burnham-on-Sea King Alfred School Track", "Burnley Barden Athletics Track", "Burton upon Trent Shobnall Leisure Complex",
-            "Bury St. Edmunds West Suffolk Athletics Arena", "Caister High School Track", "Camberley RMA Sandhurst Track", "Cambridge University Track",
-            "Canterbury High School Track", "Cardiff Cardiff International Sports Stadium", "Cardiff National Indoor Athletics Centre", "Carlisle Sheepmount Athletics Stadium",
-            "Carmarthen Leisure Centre Track", "Carn Brea Carn Brea Leisure Centre Track", "Carshalton David Weir Leisure Centre", "Castle Douglas High School Track",
-            "Caterham School Track", "Catford Ladywell Arena", "Charnwood Campus Track", "Chatham The Rochester & Medway Athletics Club Track",
-            "Cheadle Hulme School Track", "Chelmsford Melbourne Park Athletics Centre", "Cheltenham The Prince of Wales Stadium", "Chester Stanney High School Track",
-            "Chester-le-Street Riverside Sports Complex", "Chichester College Track", "Chigwell School Track", "Chippenham Sheldon School Track",
-            "Chorley St. Marys School Track", "Cirencester Deer Park School Track", "Cleckheaton Spenborough AC Track", "Clevedon School Track",
-            "Clifton College Track", "Clitheroe Royal Grammar School Track", "Coalville Hermitage Leisure Centre Track", "Colchester Garrison Track",
-            "Coleraine University of Ulster Track", "Colwyn Bay Eirias Park", "Corby Rockingham Triangle", "Coulsdon Woodcote High School Track",
-            "Coventry University of Warwick Track", "Cowbridge Comprehensive School Track", "Craigavon Drumsill House Hotel Track", "Cranleigh School Track",
-            "Crawley K2 Athletics Centre", "Crewe Cumberland Arena", "Cudworth Dorothy Hyman Stadium", "Cullompton School Track", "Cwmbran Stadium",
-            "Dagenham Mayesbrook Park", "Dartford Central Park Athletics Centre", "Derby Moorways Stadium", "Diss High School Track",
-            "Doncaster Athletic Club Track", "Dorchester Thomas Hardye School Track", "Douglas National Sports Centre", "Dover Duke of York's Royal Military School Track",
-            "Downham Market High School Track", "Dudley The Dell Stadium", "Dulwich College Track", "Dumfries DG One", "Dunbar Hallhill Healthy Living Centre",
-            "Dundee Caird Park Stadium", "Dunfermline Pitreavie Stadium", "Durham University Track", "Eastbourne Sports Park", "East Grinstead Imberhorne School Track",
-            "East Kilbride John Wright Sports Centre", "Edinburgh Meadowbank Stadium", "Edinburgh Saughton Sports Complex", "Ellesmere College Track", "Ellesmere Port Stanney Oaks Track",
-            "Eltham Sutcliffe Park Athletics Track", "Enfield Queen Elizabeth II Stadium", "Epsom & Ewell Harriers Track", "Erith Leisure Centre", "Eton College Track",
-            "Evesham The Prince Henry's High School Track", "Exeter Arena", "Falmouth The Moor", "Fareham Crofton School Track", "Farnborough Military Stadium",
-            "Felixtowe School Track", "Feltham Community College Track", "Fleet Crookham Common", "Folkestone Three Hills Sports Park", "Forres Grant Park",
-            "Fort George", "Foyce The Playing Fields", "Frome School Track", "Gainsborough The Queen Elizabeth's High School", "Gateshead International Stadium",
-            "Gillingham The Howard School Track", "Girvan Academy Track", "Glasgow Bellahouston Park", "Glasgow Crownpoint Sports Complex", "Glasgow Hutchesons' Grammar School Track",
-            "Glasgow Scotstoun Stadium", "Glenalmond College Track", "Glengarnock", "Gloucester Blackbridge Jubilee Athletics Track", "Godalming Charterhouse School Track",
-            "Goole Youth Action", "Gordonstoun School Track", "Gosport Holbrook Recreation Centre", "Grantham Meres Leisure Centre", "Grangemouth Stadium",
-            "Gravesend The Cyclopark", "Grays Thurrock Harriers AC Track", "Great Yarmouth Wellesley Recreation Ground", "Greenford Perivale Park Athletics Track", "Grimsby King George V Stadium",
-            "Guernsey Footes Lane", "Guildford Spectrum", "Hackney Marshes", "Halesowen The Manor Abbey Stadium", "Halifax Spring Hall Athletics Track",
-            "Hamilton John Cumming Stadium", "Harrow School Track", "Harwich School Track", "Hastings William Parker School Track", "Hatfield Gosling Sports Park",
-            "Haverfordwest Sir Thomas Picton School Track", "Havering Mayesbrook Park", "Haywards Heath The Oathall Community College Track", "Helensburgh",
-            "Hemel Hempstead Jarman Park", "Hendon Barnet Copthall Stadium", "Hereford Leisure Centre", "High Wycombe Little Marlow Athletics Track", "Hillingdon Athletics Stadium",
-            "Hinckley Greencroft Park", "Hornchurch Hornchurch Stadium", "Horsham Broadbridge Heath Leisure Centre", "Huddersfield Leeds Road Playing Fields", "Hull Costello Stadium",
-            "Huntingdon St. Peters School Track", "Ilford Cricklefields Athletic Ground", "Inverness Queen's Park Stadium", "Ipswich Northgate Stadium", "Irvine Ravenspark Stadium",
-            "Jarrow Monkton Stadium", "Jersey FB Fields", "Keighley University Academy Keighley", "Kendal Kirkbie Kendal School Track", "Kettering Arena Sports",
-            "Kidderminster Stourport Sports Club", "Kilmarnock Ayrshire Athletics Arena", "King's Lynn Lynnsport", "Kingston upon Thames Kingsmeadow Stadium", "Kirkcaldy High School Track",
-            "Kirkwall Grammar School Track", "Lancaster Salt Ayre Leisure Centre", "Lancing College Track", "Leamington Spa Edmondscote Athletics Track", "Leeds Beckett University Track",
-            "Leeds John Charles Centre for Sport", "Leicester Saffron Lane Athletics Stadium", "Leigh Sports Village", "Lerwick Clickimin Leisure Complex", "Lewes Leisure Centre",
-            "Lichfield Friary Grange Leisure Centre", "Lincoln Yarborough Leisure Centre", "Linwood ON-X Linwood", "Lisburn Lagan Valley AC Track", "Litherland Sports Park",
-            "Littlehampton School Track", "Liverpool Wavertree Sports Park", "Livingston Craigswood Sports Centre", "Llanelli Leisure Centre Track", "London Mile End Stadium",
-            "London Newham Leisure Centre", "London Parliament Hill Fields Athletics Track", "London Southwark Park Athletics Centre", "London Tooting Bec Athletics Track", "London Walthamstow Feel Good Centre",
-            "London Willesden Sports Centre", "Longford Park Stadium", "Loughborough University Track", "Louth King Edward VI Grammar School Track", "Lowestoft East Point Academy",
-            "Ludlow School Track", "Luton Stockwood Park Athletics Centre", "Lydney Whitecross School Track", "Macclesfield Leisure Centre", "Maidenhead Braywick Park",
-            "Maidstone Sutton Valence School Track", "Maldon Plume School Track", "Malvern College Track", "Manchester Regional Arena", "Mansfield Berry Hill Park",
-            "March Neale-Wade Community College Track", "Margate The Royal School for Deaf Children", "Market Rasen De Aston School Track", "Marlborough College Track",
-            "Melksham Town", "Melton Mowbray King Edward VII School Track", "Middlesbrough Sports Village", "Midhurst", "Millfield School Track",
-            "Milton Keynes Stantonbury Campus", "Minehead West Somerset College Track", "Motherwell Wishaw Sports Centre", "Neath Cwrt Herbert Athletics Track",
-            "Newark The Magnus Church of England School Track", "Newbury Crookham Common", "Newcastle upon Tyne Gateshead College", "Newport International Sports Village",
-            "Newquay Sports Centre", "Newton Abbot Coombeshead Academy", "Newtown Maldwyn Leisure Centre", "Northampton Chris Moody Centre", "Northwood Merchant Taylors' School Track",
-            "Norwich Sportspark", "Nottingham Harvey Hadden Stadium", "Nuneaton The Pingles Stadium", "Oakham Rutland County College Track", "Oban Mossfield Stadium",
-            "Oldbury The Oldbury College of Sport Track", "Oldham Radclyffe Athletics Centre", "Orpington St. Olave's Grammar School Track", "Oswestry School Track", "Oxford Horspath Athletics Track",
-            "Oxford Iffley Road Track", "Par", "Pembroke School Track", "Penistone Grammar School", "Penzance Carn Brea", "Perth George Duncan Athletics Arena",
-            "Peterborough Embankment Athletics Track", "Petersfield The Petersfield School Track", "Pitlochry", "Plymouth Brickfields Sports Centre", "Pontefract School Track",
-            "Poole Ashdown Athletics Centre", "Portadown", "Porthmadog", "Portsmouth Mountbatten Centre", "Prestatyn", "Preston University of Central Lancashire Sports Arena",
-            "Radley College Track", "Ramsgate Chatham & Clarendon Grammar School Track", "Reading Palmer Park Stadium", "Redditch Abbey Stadium", "Redruth Carn Brea",
-            "Reigate Priory Park", "Rhyl", "Richmond upon Thames St Mary's University College Track", "Rochdale Kingsway Park High School Track", "Rochester The Mathematical School Track",
-            "Ross-on-Wye", "Rotherham Herringthorpe Stadium", "Rothwell", "Royal Tunbridge Wells The Nevill Ground", "Rugby School Track", "Rugeley",
-            "Runcorn", "Rushden", "Salford Cleavley Athletics Track", "Salisbury South Wilts Grammar School for Girls Track", "Sandown", "Scunthorpe Quibell Park Stadium",
-            "Seaford", "Settle", "Sevenoaks School Track", "Sheffield Woodbourn Road Stadium", "Shepton Mallet", "Sherborne School Track", "Shildon", "Shrewsbury London Road Sports Centre",
-            "Sittingbourne", "Skegness", "Skipton", "Sleaford", "Slough Thames Valley Athletics Centre", "Solihull Norman Green Athletics Track", "Southampton Sports Centre",
-            "Southend-on-Sea Garon Park", "Southport Kingswood College Track", "South Shields Temple Park Centre", "Sowerby Bridge", "Spalding", "St Albans Verulamium Park",
-            "Stafford Rowley Park Stadium", "Stamford", "Stevenage Ridlins Wood", "Stirling University Track", "Stockport Woodbank Park", "Stockton-on-Tees", "Stoke-on-Trent Northwood Stadium",
-            "Stone", "Stornoway", "Stourbridge", "Stourport-on-Severn", "Stowmarket", "Stratford-upon-Avon", "Street", "Stretford Longford Park Stadium",
-            "Sunderland Silksworth Sports Complex", "Sutton-in-Ashfield", "Swansea University Track", "Swindon County Ground Athletics Track", "Tadcaster", "Tamworth", "Taunton",
-            "Telford", "Thetford", "Thornbury", "Thurrock", "Tipton", "Tonbridge", "Torfaen", "Torquay", "Totnes",
-            "Trafford", "Tullamore", "Turriff", "Tweedbank", "Uckfield", "Ulverston", "Upminster", "Wakefield",
-            "Wallasey", "Wallingford", "Wallsend", "Walsall", "Wantage", "Ware", "Warley", "Warminster", "Warrington", "Warwick",
-            "Watford", "Wath upon Dearne", "Wellingborough", "Wellington", "Wells", "Welwyn Garden City", "Westbury", "Weston-super-Mare", "Weymouth", "Whitby",
-            "Whitchurch", "Whitehaven", "Wick", "Widnes", "Wigan", "Wigton", "Wimborne", "Wincanton", "Winchester", "Windsor",
-            "Winsford", "Wisbech", "Wishaw", "Witham", "Witney", "Woking", "Wokingham", "Wolverhampton", "Wombourne", "Woodbridge", "Woodford Green",
-            "Worcester", "Workington", "Worksop", "Worthing", "Wrexham", "Wymondham", "Yeovil"
-        ].sort();
+            { name: "Abingdon Tilsley Park Track", latitude: 51.682, longitude: -1.294 },
+            { name: "Aldershot Military Stadium", latitude: 51.258, longitude: -0.772 },
+            { name: "Bangor Treborth Athletics Track", latitude: 53.218, longitude: -4.16 },
+            { name: "Basildon Gloucester Park Arena", latitude: 51.573, longitude: 0.458 },
+            { name: "Basingstoke Down Grange Track", latitude: 51.254, longitude: -1.121 },
+            { name: "Bath University of Bath Track", latitude: 51.378, longitude: -2.324 },
+            { name: "Bedford Athletic Stadium", latitude: 52.128, longitude: -0.45 },
+            { name: "Birmingham Alexander Stadium", latitude: 52.528, longitude: -1.895 },
+            { name: "Blackburn Witton Park Athletics Track", latitude: 53.738, longitude: -2.518 },
+            { name: "Blackpool Stanley Park Athletics Arena", latitude: 53.811, longitude: -3.023 },
+            { name: "Bolton Leverhulme Park Athletics Stadium", latitude: 53.593, longitude: -2.404 },
+            { name: "Bournemouth King's Park Athletics Centre", latitude: 50.735, longitude: -1.838 },
+            { name: "Bracknell John Nike Athletics Stadium", latitude: 51.398, longitude: -0.732 },
+            "Bradford Horsfall Stadium",
+            "Brighton Withdean Stadium",
+            "Bristol Whitehall Athletics Arena",
+            "Bromley Norman Park Athletics Track",
+            { name: "Bury St. Edmunds West Suffolk Athletics Arena", latitude: 52.256, longitude: 0.697 },
+            { name: "Cambridge University Track", latitude: 52.213, longitude: 0.106 },
+            { name: "Cardiff International Sports Stadium", latitude: 51.488, longitude: -3.22 },
+            { name: "Chelmsford Melbourne Park Athletics Centre", latitude: 51.745, longitude: 0.463 },
+            "Cheltenham The Prince of Wales Stadium",
+            "Chester-le-Street Riverside Sports Complex",
+            { name: "Coventry University of Warwick Track", latitude: 52.381, longitude: -1.562 },
+            "Crawley K2 Athletics Centre",
+            { name: "Derby Moorways Stadium", latitude: 52.895, longitude: -1.479 },
+            { name: "Doncaster Athletic Club Track", latitude: 53.523, longitude: -1.107 },
+            { name: "Dudley The Dell Stadium", latitude: 52.483, longitude: -2.062 },
+            { name: "Eton College Track", latitude: 51.494, longitude: -0.627 },
+            { name: "Exeter Arena", latitude: 50.731, longitude: -3.497 },
+            { name: "Gateshead International Stadium", latitude: 54.963, longitude: -1.583 },
+            { name: "Glasgow Scotstoun Stadium", latitude: 55.882, longitude: -4.341 },
+            { name: "Gloucester Blackbridge Jubilee Athletics Track", latitude: 51.848, longitude: -2.252 },
+            { name: "Grimsby King George V Stadium", latitude: 53.56, longitude: -0.053 },
+            { name: "Guildford Spectrum", latitude: 51.246, longitude: -0.551 },
+            { name: "Halesowen The Manor Abbey Stadium", latitude: 52.455, longitude: -2.039 },
+            { name: "Hendon Barnet Copthall Stadium", latitude: 51.611, longitude: -0.228 },
+            { name: "Hereford Leisure Centre", latitude: 52.067, longitude: -2.727 },
+            { name: "High Wycombe Little Marlow Athletics Track", latitude: 51.581, longitude: -0.732 },
+            { name: "Hull Costello Stadium", latitude: 53.754, longitude: -0.414 },
+            { name: "Ipswich Northgate Stadium", latitude: 52.073, longitude: 1.168 },
+            { name: "Jarrow Monkton Stadium", latitude: 54.96, longitude: -1.483 },
+            { name: "Kingston upon Thames Kingsmeadow Stadium", latitude: 51.408, longitude: -0.283 },
+            { name: "Leeds John Charles Centre for Sport", latitude: 53.765, longitude: -1.53 },
+            { name: "Leicester Saffron Lane Athletics Stadium", latitude: 52.61, longitude: -1.144 },
+            { name: "Leigh Sports Village", latitude: 53.49, longitude: -2.53 },
+            { name: "Lewes Leisure Centre", latitude: 50.877, longitude: 0.02 },
+            { name: "Lincoln Yarborough Leisure Centre", latitude: 53.243, longitude: -0.54 },
+            { name: "Liverpool Wavertree Sports Park", latitude: 53.398, longitude: -2.915 },
+            { name: "London Crystal Palace", latitude: 51.423, longitude: -0.071 },
+            { name: "London Mile End Stadium", latitude: 51.52, longitude: -0.041 },
+            { name: "London Parliament Hill", latitude: 51.56, longitude: -0.155 },
+            { name: "Loughborough University Track", latitude: 52.766, longitude: -1.233 },
+            { name: "Luton Stockwood Park Athletics Centre", latitude: 51.865, longitude: -0.435 },
+            { name: "Manchester Regional Arena", latitude: 53.485, longitude: -2.202 },
+            { name: "Mansfield Berry Hill Park", latitude: 53.153, longitude: -1.191 },
+            { name: "Middlesbrough Sports Village", latitude: 54.558, longitude: -1.221 },
+            { name: "Milton Keynes Stantonbury Campus", latitude: 52.063, longitude: -0.79 },
+            { name: "Neath Cwrt Herbert Athletics Track", latitude: 51.666, longitude: -3.79 },
+            { name: "Newport International Sports Village", latitude: 51.565, longitude: -2.969 },
+            { name: "Northampton Chris Moody Centre", latitude: 52.268, longitude: -0.88 },
+            { name: "Norwich Sportspark", latitude: 52.624, longitude: 1.231 },
+            { name: "Nottingham Harvey Hadden Stadium", latitude: 52.951, longitude: -1.217 },
+            { name: "Nuneaton The Pingles Stadium", latitude: 52.518, longitude: -1.46 },
+            { name: "Oxford Horspath Athletics Track", latitude: 51.737, longitude: -1.19 },
+            { name: "Peterborough Embankment Athletics Track", latitude: 52.579, longitude: -0.239 },
+            { name: "Plymouth Brickfields Sports Centre", latitude: 50.38, longitude: -4.167 },
+            { name: "Poole Ashdown Athletics Centre", latitude: 50.75, longitude: -1.966 },
+            { name: "Portsmouth Mountbatten Centre", latitude: 50.83, longitude: -1.069 },
+            { name: "Preston University of Central Lancashire Sports Arena", latitude: 53.805, longitude: -2.716 },
+            { name: "Reading Palmer Park Stadium", latitude: 51.455, longitude: -0.941 },
+            { name: "Redditch Abbey Stadium", latitude: 52.292, longitude: -1.93 },
+            { name: "Rotherham Herringthorpe Stadium", latitude: 53.419, longitude: -1.332 },
+            { name: "Sheffield Woodbourn Road Stadium", latitude: 53.391, longitude: -1.439 },
+            { name: "Shrewsbury London Road Sports Centre", latitude: 52.705, longitude: -2.729 },
+            { name: "Slough Thames Valley Athletics Centre", latitude: 51.503, longitude: -0.627 },
+            { name: "Solihull Norman Green Athletics Track", latitude: 52.421, longitude: -1.782 },
+            { name: "Southampton Sports Centre", latitude: 50.936, longitude: -1.442 },
+            { name: "Southend-on-Sea Garon Park", latitude: 51.558, longitude: 0.72 },
+            { name: "Stoke-on-Trent Northwood Stadium", latitude: 53.04, longitude: -2.171 },
+            { name: "Stourport Sports Club", latitude: 52.342, longitude: -2.296 },
+            { name: "Stratford-upon-Avon", latitude: 52.186, longitude: -1.724 },
+            { name: "Sunderland Silksworth Sports Complex", latitude: 54.881, longitude: -1.411 },
+            { name: "Swansea University Track", latitude: 51.61, longitude: -3.98 },
+            { name: "Swindon County Ground Athletics Track", latitude: 51.565, longitude: -1.772 },
+            { name: "Tamworth", latitude: 52.63, longitude: -1.69 },
+            { name: "Thurrock", latitude: 51.48, longitude: 0.35 },
+            { name: "Tonbridge", latitude: 51.2, longitude: 0.28 },
+            { name: "Wakefield", latitude: 53.68, longitude: -1.5 },
+            { name: "Warrington Victoria Park", latitude: 53.379, longitude: -2.602 },
+            { name: "Watford Woodside Stadium", latitude: 51.678, longitude: -0.378 },
+            { name: "Wigan", latitude: 53.55, longitude: -2.63 },
+            { name: "Winchester", latitude: 51.05, longitude: -1.32 },
+            { name: "Woking", latitude: 51.32, longitude: -0.55 },
+            { name: "Wolverhampton Aldersley Leisure Village", latitude: 52.608, longitude: -2.146 },
+            { name: "Worcester", latitude: 52.19, longitude: -2.22 },
+            { name: "Worthing", latitude: 50.82, longitude: -0.37 },
+            { name: "Wrexham", latitude: 53.05, longitude: -3.0 },
+            { name: "Yeovil", latitude: 50.94, longitude: -2.64 }
+        ].sort((a, b) => {
+            const nameA = typeof a === 'string' ? a : a.name;
+            const nameB = typeof b === 'string' ? b : b.name;
+            return nameA.localeCompare(nameB);
+        });
 
         function Icon({ name, size = 16, className = "" }) {
             const iconStyle = { width: size, height: size, strokeWidth: 2, stroke: 'currentColor', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' };
@@ -219,8 +232,8 @@
                 }
             }, [sessions, isLoading]);
             
-            const handleCreateSession = (name, date, track) => {
-                const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString(), track };
+            const handleCreateSession = (name, date, track, weather) => {
+                const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString(), track, weather };
                 setSessions(prev => [newSession, ...prev].sort((a,b) => new Date(b.date) - new Date(a.date)));
                 setActiveSessionId(newSession.id);
                 setView('logger');
@@ -335,18 +348,42 @@
             const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
             const [track, setTrack] = useState('');
             const [mapUrl, setMapUrl] = useState('');
+            const [weather, setWeather] = useState('');
 
-            const handleTrackChange = (selectedTrack) => {
-                setTrack(selectedTrack);
-                if (selectedTrack) {
-                    const encodedTrack = encodeURIComponent(selectedTrack + ', UK');
+            const fetchWeather = (lat, lon) => {
+                setWeather('Fetching weather...');
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,wind_speed_10m`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.current) {
+                            const temp = data.current.temperature_2m;
+                            const wind = data.current.wind_speed_10m;
+                            setWeather(`Current Weather: ${temp}°C, ${wind} km/h wind`);
+                        } else {
+                            setWeather('Could not fetch weather.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Weather fetch error:", error);
+                        setWeather('Could not fetch weather.');
+                    });
+            };
+
+            const handleTrackChange = (selectedTrackName) => {
+                setTrack(selectedTrackName);
+                const selectedTrackObject = ukAthleticTracks.find(t => typeof t === 'object' && t.name === selectedTrackName);
+
+                if (selectedTrackObject) {
+                    fetchWeather(selectedTrackObject.latitude, selectedTrackObject.longitude);
+                    const encodedTrack = encodeURIComponent(selectedTrackName + ', UK');
                     setMapUrl(`https://maps.google.com/maps?q=${encodedTrack}&t=&z=13&ie=UTF8&iwloc=&output=embed`);
                 } else {
+                    setWeather('');
                     setMapUrl('');
                 }
             }
 
-            const handleSubmit = (e) => { e.preventDefault(); if(name.trim()){ onCreateSession(name.trim(), date, track); }};
+            const handleSubmit = (e) => { e.preventDefault(); if(name.trim()){ onCreateSession(name.trim(), date, track, weather); }};
             
             return (<div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 w-full max-w-md">
@@ -355,19 +392,27 @@
                         <div className="space-y-4">
                             <div>
                                <label htmlFor="session-name" className="block text-sm font-medium text-gray-700 mb-1">Session Name</label>
-                               <input id="session-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Velocity Day" className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                               <input id="session-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Velocity Day" className="w-full bg-gray-100 text-gray-900 h-12 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                             </div>
                             <div>
                                <label htmlFor="session-date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                               <input id="session-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                               <input id="session-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-gray-100 text-gray-900 h-12 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                             </div>
                              <div>
                                <label htmlFor="session-track" className="block text-sm font-medium text-gray-700 mb-1">Track (Optional)</label>
-                               <select id="session-track" value={track} onChange={(e) => handleTrackChange(e.target.value)} className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                               <select id="session-track" value={track} onChange={(e) => handleTrackChange(e.target.value)} className="w-full bg-gray-100 text-gray-900 h-12 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                                  <option value="">Select a track</option>
-                                 {ukAthleticTracks.map(trackName => <option key={trackName} value={trackName}>{trackName}</option>)}
+                                 {ukAthleticTracks.map(trackItem => {
+                                     const trackName = typeof trackItem === 'string' ? trackItem : trackItem.name;
+                                     return <option key={trackName} value={trackName}>{trackName}</option>
+                                 })}
                                </select>
                             </div>
+                            {weather && (
+                                <div className="mt-2 pl-1">
+                                    <p className="text-sm text-gray-600">{weather}</p>
+                                </div>
+                            )}
                             {mapUrl && (
                                 <div className="mt-4">
                                     <iframe
@@ -487,8 +532,10 @@
                 <div className="bg-white p-4 sm:p-6 rounded-2xl">
                     <h2 className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900">{session.name}</h2>
                     <p className="text-sm text-gray-500 mb-1">Date: {new Date(session.date).toLocaleDateString()}</p>
-                    {session.track && <p className="text-sm text-gray-500 mb-8">Track: {session.track}</p>}
-                    {!session.track && <div className="mb-8"></div>}
+                    {session.track && <p className="text-sm text-gray-500">Track: {session.track}</p>}
+                    {session.weather && <p className="text-sm text-gray-500 mb-8">Weather: {session.weather}</p>}
+                    {(!session.track && !session.weather) && <div className="mb-8"></div>}
+
 
                     <form onSubmit={handleSubmit} className="mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl">
                         <div className="grid md:grid-cols-2 gap-6 items-center">
