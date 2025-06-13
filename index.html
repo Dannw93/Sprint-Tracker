@@ -69,7 +69,7 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
-
+        
         // A list of UK athletic tracks with coordinates for the weather API.
         const ukAthleticTracks = [
             { name: "Abingdon Tilsley Park Track", latitude: 51.682, longitude: -1.294 },
@@ -234,8 +234,8 @@
                 }
             }, [sessions, isLoading]);
             
-            const handleCreateSession = (name, date, track, weather) => {
-                const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString(), track, weather, notes: "" };
+            const handleCreateSession = (name, date, track, weather, type) => {
+                const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString(), track, weather, notes: "", type };
                 setSessions(prev => [newSession, ...prev].sort((a,b) => new Date(b.date) - new Date(a.date)));
                 setActiveSessionId(newSession.id);
                 setView('logger');
@@ -312,7 +312,7 @@
                     case 'logger':
                     default: 
                         if (activeSession) {
-                           return <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} onUpdateSession={handleUpdateSession} />
+                           return <SprintLogger session={activeSession} sessions={sessions} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} onUpdateSession={handleUpdateSession} />
                         }
                         return <HomePage sessions={sessions} onGoToSession={handleGoToSession} setView={setView} setIsCreateModalOpen={setIsCreateModalOpen} />;
                 }
@@ -434,6 +434,7 @@
             const [track, setTrack] = useState('');
             const [mapUrl, setMapUrl] = useState('');
             const [weather, setWeather] = useState('');
+            const [sessionType, setSessionType] = useState('Training');
             
             useEffect(() => {
                 let isMounted = true;
@@ -486,7 +487,7 @@
             }, [track]);
 
 
-            const handleSubmit = (e) => { e.preventDefault(); if(name.trim()){ onCreateSession(name.trim(), date, track, weather); }};
+            const handleSubmit = (e) => { e.preventDefault(); if(name.trim()){ onCreateSession(name.trim(), date, track, weather, sessionType); }};
             
             return (<div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                 <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 w-full max-w-md">
@@ -500,6 +501,19 @@
                             <div>
                                <label htmlFor="session-date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                                <input id="session-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-gray-100 text-gray-900 h-12 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Session Type</label>
+                                <div className="flex space-x-4">
+                                    <label className="flex items-center">
+                                        <input type="radio" value="Training" checked={sessionType === 'Training'} onChange={(e) => setSessionType(e.target.value)} className="form-radio h-4 w-4 text-blue-600"/>
+                                        <span className="ml-2 text-gray-700">Training</span>
+                                    </label>
+                                    <label className="flex items-center">
+                                        <input type="radio" value="Race" checked={sessionType === 'Race'} onChange={(e) => setSessionType(e.target.value)} className="form-radio h-4 w-4 text-blue-600"/>
+                                        <span className="ml-2 text-gray-700">Race</span>
+                                    </label>
+                                </div>
                             </div>
                              <div>
                                <label htmlFor="session-track" className="block text-sm font-medium text-gray-700 mb-1">Track (Optional)</label>
@@ -551,7 +565,19 @@
                         <ul className="space-y-2">
                             {sessions.map(session => <li key={session.id}>
                                 {editingId === session.id ? (<div className="bg-white p-2 rounded-lg"><input type="text" defaultValue={session.name} autoFocus onBlur={(e) => handleUpdate(session.id, e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUpdate(session.id, e.target.value)} className="w-full bg-gray-200 p-2 rounded-lg"/></div>) :
-                                (<div className={`group w-full text-left p-3 rounded-xl transition flex justify-between items-center ${activeSessionId === session.id ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200 text-gray-700'}`}><button onClick={() => onSelectSession(session.id)} className="flex-grow text-left"><p className="font-semibold">{session.name}</p><p className="text-xs text-gray-500">{new Date(session.date).toLocaleDateString()}</p></button><div className="flex opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setEditingId(session.id)} className="p-1 hover:text-gray-900"><Icon name="edit" size={16}/></button><button onClick={() => setConfirmDeleteId(session.id)} className="p-1 hover:text-red-500"><Icon name="trash2" size={16}/></button></div></div>)}
+                                (<div className={`group w-full text-left p-3 rounded-xl transition flex justify-between items-center ${activeSessionId === session.id ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-200 text-gray-700'}`}>
+                                    <button onClick={() => onSelectSession(session.id)} className="flex-grow text-left">
+                                        <p className="font-semibold">{session.name}</p>
+                                        <div className="flex items-center space-x-2">
+                                            <p className="text-xs text-gray-500">{new Date(session.date).toLocaleDateString()}</p>
+                                            {session.type && <span className={`text-xs px-2 py-0.5 rounded-full ${session.type === 'Race' ? 'bg-purple-200 text-purple-800' : 'bg-green-200 text-green-800'}`}>{session.type}</span>}
+                                        </div>
+                                    </button>
+                                    <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => setEditingId(session.id)} className="p-1 hover:text-gray-900"><Icon name="edit" size={16}/></button>
+                                        <button onClick={() => setConfirmDeleteId(session.id)} className="p-1 hover:text-red-500"><Icon name="trash2" size={16}/></button>
+                                    </div>
+                                </div>)}
                             </li>)}
                         </ul>}
                     </>)}
@@ -615,7 +641,7 @@
             );
         }
 
-        function SprintLogger({ session, onAddSprint, onUpdateSprint, onDeleteSprint, onUpdateSession }) {
+        function SprintLogger({ session, sessions, onAddSprint, onUpdateSprint, onDeleteSprint, onUpdateSession }) {
             const [distance, setDistance] = useState(100);
             const [time, setTime] = useState('');
             const [startType, setStartType] = useState('Standing');
@@ -696,7 +722,7 @@
                     </div>
 
                     <div><h3 className="text-xl font-bold mb-4 text-gray-800">Logged Sprints</h3><div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin">{(session.sprints || []).length > 0 ? <ul className="space-y-3">{[...session.sprints].sort((a,b) => b.id - a.id).map(sprint => <SprintListItem key={sprint.id} sprint={sprint} onUpdate={onUpdateSprint} onDelete={onDeleteSprint} />)}</ul> : <p className="text-gray-500 text-center py-4">No sprints logged yet.</p>}</div></div>
-                    <PersonalBests sessions={session.sprints ? [session] : []} />
+                    <PersonalBests sessions={sessions} />
                 </div>
             );
         }
