@@ -70,6 +70,100 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
+        // A list of UK athletic tracks. In a real-world app, this might come from an API.
+        const ukAthleticTracks = [
+            "Abbots Bromley School Track", "Aberdare Sobell Sports Stadium", "Aberdeen Balgownie Pavilion Track", "Aberdeen Chris Anderson Stadium",
+            "Aberystwyth University of Wales Track", "Abingdon Dalton Barracks Track", "Abingdon Tilsley Park Track", "Accrington The Hyndburn Athletic Club",
+            "Acton The Japanese School Track", "Addlestone St. George's College Track", "Airdrie Airdrie Leisure Centre Track", "Alconbury RAF Alconbury Track",
+            "Aldershot Military Stadium", "Amble Unknown track name", "Ammanford Amman Valley Comprehensive School Track", "Ampleforth Ampleforth College Track",
+            "Andover Charlton Athletic Track", "Annan Everholm Athletics Track", "Antrim Antrim Stadium", "Ascot St Mary's School Track",
+            "Ashford The Julie Rose Stadium", "Ashton-under-Lyne Richmond Park Athletics Stadium", "Ayr Dam Park Stadium", "Banbury Drayton School Athletics Track",
+            "Bangor Ballykillaire Sports Centre Track", "Bangor Treborth Athletics Track", "Barbican Holmes Place Barbican Indoor Track", "Bargoed Bargoed Stadium",
+            "Barlborough Barlborough Hall School Track", "Barnard Castle Teesdale School Track", "Barnes Barn Elms Athletics Track", "Barnes St. Paul's School Track",
+            "Barrow-in-Furness Park Vale Sports Stadium", "Barry Jenner Park Athletic Stadium", "Basildon Gloucester Park Arena", "Basingstoke Down Grange Track",
+            "Bath Kingswood School Track", "Bath University of Bath Track", "Bathgate Bathgate Sports Centre Track", "Battersea Millennium Arena, Battersea Park",
+            "Beachley Beachley Barracks Track", "Bebington The Oval Wirral", "Bedford Athletic Stadium", "Bedlington Bedlingtonshire Community High School Track",
+            "Beith Unknown track name", "Belfast Aircraft Park Track", "Belfast Belfast City Council Mary Peters Track", "Belfast Hammer Complex Track",
+            "Belfast Paisley Park Track", "Belfast St. Mary's Christian Brothers Grammar School Track", "Belfast Trench House Track", "Berry Hill Royal Forest of Dean College Track",
+            "Billingham Central Avenue Stadium", "Bingham Bingham Leisure Centre Track", "Birmingham Alexander Stadium", "Birmingham Fox Hollies Leisure Centre Track",
+            "Birmingham Holloway Head Playing Field Track", "Birmingham King Edward's School Track", "Birmingham National Indoor Arena", "Birmingham University of Birmingham Track",
+            "Bishop Auckland Bishop Auckland College Track", "Bishopbriggs Huntershill Recreation Ground Track", "Blackburn Witton Park Athletics Track", "Blackpool Stanley Park Athletics Arena",
+            "Blandford Forum Blandford Camp Track", "Blaydon Blaydon Comprehensive School (formerly) Track", "Blyth Unknown track name", "Bolton Leverhulme Park Athletics Stadium",
+            "Boreham New Hall School Track", "Boston Finnforest Boston Arena", "Bournemouth King's Park Athletics Centre", "Bow Common St. Pauls Way Community School Track",
+            "Bracknell John Nike Athletics Stadium", "Bradford Horsfall Stadium", "Braintree The Tabor Science College Track", "Bramley Unknown track name",
+            "Brecon Penlan Athletics Track", "Brentwood School Track", "Bridge of Don Barracks Track", "Bridgend Athletic Club Track", "Bridgwater Blake School Track",
+            "Brighton Withdean Stadium", "Bristol Whitehall Athletics Arena", "Brixworth Pitsford School Track", "Broadstairs The Charles Dickens School Track",
+            "Bromley Norman Park Athletics Track", "Bromsgrove Ryland Centre Track", "Bruton King's School Track", "Buckie Buckie High School Track",
+            "Bungay High School Track", "Burnham-on-Sea King Alfred School Track", "Burnley Barden Athletics Track", "Burton upon Trent Shobnall Leisure Complex",
+            "Bury St. Edmunds West Suffolk Athletics Arena", "Caister High School Track", "Camberley RMA Sandhurst Track", "Cambridge University Track",
+            "Canterbury High School Track", "Cardiff Cardiff International Sports Stadium", "Cardiff National Indoor Athletics Centre", "Carlisle Sheepmount Athletics Stadium",
+            "Carmarthen Leisure Centre Track", "Carn Brea Carn Brea Leisure Centre Track", "Carshalton David Weir Leisure Centre", "Castle Douglas High School Track",
+            "Caterham School Track", "Catford Ladywell Arena", "Charnwood Campus Track", "Chatham The Rochester & Medway Athletics Club Track",
+            "Cheadle Hulme School Track", "Chelmsford Melbourne Park Athletics Centre", "Cheltenham The Prince of Wales Stadium", "Chester Stanney High School Track",
+            "Chester-le-Street Riverside Sports Complex", "Chichester College Track", "Chigwell School Track", "Chippenham Sheldon School Track",
+            "Chorley St. Marys School Track", "Cirencester Deer Park School Track", "Cleckheaton Spenborough AC Track", "Clevedon School Track",
+            "Clifton College Track", "Clitheroe Royal Grammar School Track", "Coalville Hermitage Leisure Centre Track", "Colchester Garrison Track",
+            "Coleraine University of Ulster Track", "Colwyn Bay Eirias Park", "Corby Rockingham Triangle", "Coulsdon Woodcote High School Track",
+            "Coventry University of Warwick Track", "Cowbridge Comprehensive School Track", "Craigavon Drumsill House Hotel Track", "Cranleigh School Track",
+            "Crawley K2 Athletics Centre", "Crewe Cumberland Arena", "Cudworth Dorothy Hyman Stadium", "Cullompton School Track", "Cwmbran Stadium",
+            "Dagenham Mayesbrook Park", "Dartford Central Park Athletics Centre", "Derby Moorways Stadium", "Diss High School Track",
+            "Doncaster Athletic Club Track", "Dorchester Thomas Hardye School Track", "Douglas National Sports Centre", "Dover Duke of York's Royal Military School Track",
+            "Downham Market High School Track", "Dudley The Dell Stadium", "Dulwich College Track", "Dumfries DG One", "Dunbar Hallhill Healthy Living Centre",
+            "Dundee Caird Park Stadium", "Dunfermline Pitreavie Stadium", "Durham University Track", "Eastbourne Sports Park", "East Grinstead Imberhorne School Track",
+            "East Kilbride John Wright Sports Centre", "Edinburgh Meadowbank Stadium", "Edinburgh Saughton Sports Complex", "Ellesmere College Track", "Ellesmere Port Stanney Oaks Track",
+            "Eltham Sutcliffe Park Athletics Track", "Enfield Queen Elizabeth II Stadium", "Epsom & Ewell Harriers Track", "Erith Leisure Centre", "Eton College Track",
+            "Evesham The Prince Henry's High School Track", "Exeter Arena", "Falmouth The Moor", "Fareham Crofton School Track", "Farnborough Military Stadium",
+            "Felixtowe School Track", "Feltham Community College Track", "Fleet Crookham Common", "Folkestone Three Hills Sports Park", "Forres Grant Park",
+            "Fort George", "Foyce The Playing Fields", "Frome School Track", "Gainsborough The Queen Elizabeth's High School", "Gateshead International Stadium",
+            "Gillingham The Howard School Track", "Girvan Academy Track", "Glasgow Bellahouston Park", "Glasgow Crownpoint Sports Complex", "Glasgow Hutchesons' Grammar School Track",
+            "Glasgow Scotstoun Stadium", "Glenalmond College Track", "Glengarnock", "Gloucester Blackbridge Jubilee Athletics Track", "Godalming Charterhouse School Track",
+            "Goole Youth Action", "Gordonstoun School Track", "Gosport Holbrook Recreation Centre", "Grantham Meres Leisure Centre", "Grangemouth Stadium",
+            "Gravesend The Cyclopark", "Grays Thurrock Harriers AC Track", "Great Yarmouth Wellesley Recreation Ground", "Greenford Perivale Park Athletics Track", "Grimsby King George V Stadium",
+            "Guernsey Footes Lane", "Guildford Spectrum", "Hackney Marshes", "Halesowen The Manor Abbey Stadium", "Halifax Spring Hall Athletics Track",
+            "Hamilton John Cumming Stadium", "Harrow School Track", "Harwich School Track", "Hastings William Parker School Track", "Hatfield Gosling Sports Park",
+            "Haverfordwest Sir Thomas Picton School Track", "Havering Mayesbrook Park", "Haywards Heath The Oathall Community College Track", "Helensburgh",
+            "Hemel Hempstead Jarman Park", "Hendon Barnet Copthall Stadium", "Hereford Leisure Centre", "High Wycombe Little Marlow Athletics Track", "Hillingdon Athletics Stadium",
+            "Hinckley Greencroft Park", "Hornchurch Hornchurch Stadium", "Horsham Broadbridge Heath Leisure Centre", "Huddersfield Leeds Road Playing Fields", "Hull Costello Stadium",
+            "Huntingdon St. Peters School Track", "Ilford Cricklefields Athletic Ground", "Inverness Queen's Park Stadium", "Ipswich Northgate Stadium", "Irvine Ravenspark Stadium",
+            "Jarrow Monkton Stadium", "Jersey FB Fields", "Keighley University Academy Keighley", "Kendal Kirkbie Kendal School Track", "Kettering Arena Sports",
+            "Kidderminster Stourport Sports Club", "Kilmarnock Ayrshire Athletics Arena", "King's Lynn Lynnsport", "Kingston upon Thames Kingsmeadow Stadium", "Kirkcaldy High School Track",
+            "Kirkwall Grammar School Track", "Lancaster Salt Ayre Leisure Centre", "Lancing College Track", "Leamington Spa Edmondscote Athletics Track", "Leeds Beckett University Track",
+            "Leeds John Charles Centre for Sport", "Leicester Saffron Lane Athletics Stadium", "Leigh Sports Village", "Lerwick Clickimin Leisure Complex", "Lewes Leisure Centre",
+            "Lichfield Friary Grange Leisure Centre", "Lincoln Yarborough Leisure Centre", "Linwood ON-X Linwood", "Lisburn Lagan Valley AC Track", "Litherland Sports Park",
+            "Littlehampton School Track", "Liverpool Wavertree Sports Park", "Livingston Craigswood Sports Centre", "Llanelli Leisure Centre Track", "London Mile End Stadium",
+            "London Newham Leisure Centre", "London Parliament Hill Fields Athletics Track", "London Southwark Park Athletics Centre", "London Tooting Bec Athletics Track", "London Walthamstow Feel Good Centre",
+            "London Willesden Sports Centre", "Longford Park Stadium", "Loughborough University Track", "Louth King Edward VI Grammar School Track", "Lowestoft East Point Academy",
+            "Ludlow School Track", "Luton Stockwood Park Athletics Centre", "Lydney Whitecross School Track", "Macclesfield Leisure Centre", "Maidenhead Braywick Park",
+            "Maidstone Sutton Valence School Track", "Maldon Plume School Track", "Malvern College Track", "Manchester Regional Arena", "Mansfield Berry Hill Park",
+            "March Neale-Wade Community College Track", "Margate The Royal School for Deaf Children", "Market Rasen De Aston School Track", "Marlborough College Track",
+            "Melksham Town", "Melton Mowbray King Edward VII School Track", "Middlesbrough Sports Village", "Midhurst", "Millfield School Track",
+            "Milton Keynes Stantonbury Campus", "Minehead West Somerset College Track", "Motherwell Wishaw Sports Centre", "Neath Cwrt Herbert Athletics Track",
+            "Newark The Magnus Church of England School Track", "Newbury Crookham Common", "Newcastle upon Tyne Gateshead College", "Newport International Sports Village",
+            "Newquay Sports Centre", "Newton Abbot Coombeshead Academy", "Newtown Maldwyn Leisure Centre", "Northampton Chris Moody Centre", "Northwood Merchant Taylors' School Track",
+            "Norwich Sportspark", "Nottingham Harvey Hadden Stadium", "Nuneaton The Pingles Stadium", "Oakham Rutland County College Track", "Oban Mossfield Stadium",
+            "Oldbury The Oldbury College of Sport Track", "Oldham Radclyffe Athletics Centre", "Orpington St. Olave's Grammar School Track", "Oswestry School Track", "Oxford Horspath Athletics Track",
+            "Oxford Iffley Road Track", "Par", "Pembroke School Track", "Penistone Grammar School", "Penzance Carn Brea", "Perth George Duncan Athletics Arena",
+            "Peterborough Embankment Athletics Track", "Petersfield The Petersfield School Track", "Pitlochry", "Plymouth Brickfields Sports Centre", "Pontefract School Track",
+            "Poole Ashdown Athletics Centre", "Portadown", "Porthmadog", "Portsmouth Mountbatten Centre", "Prestatyn", "Preston University of Central Lancashire Sports Arena",
+            "Radley College Track", "Ramsgate Chatham & Clarendon Grammar School Track", "Reading Palmer Park Stadium", "Redditch Abbey Stadium", "Redruth Carn Brea",
+            "Reigate Priory Park", "Rhyl", "Richmond upon Thames St Mary's University College Track", "Rochdale Kingsway Park High School Track", "Rochester The Mathematical School Track",
+            "Ross-on-Wye", "Rotherham Herringthorpe Stadium", "Rothwell", "Royal Tunbridge Wells The Nevill Ground", "Rugby School Track", "Rugeley",
+            "Runcorn", "Rushden", "Salford Cleavley Athletics Track", "Salisbury South Wilts Grammar School for Girls Track", "Sandown", "Scunthorpe Quibell Park Stadium",
+            "Seaford", "Settle", "Sevenoaks School Track", "Sheffield Woodbourn Road Stadium", "Shepton Mallet", "Sherborne School Track", "Shildon", "Shrewsbury London Road Sports Centre",
+            "Sittingbourne", "Skegness", "Skipton", "Sleaford", "Slough Thames Valley Athletics Centre", "Solihull Norman Green Athletics Track", "Southampton Sports Centre",
+            "Southend-on-Sea Garon Park", "Southport Kingswood College Track", "South Shields Temple Park Centre", "Sowerby Bridge", "Spalding", "St Albans Verulamium Park",
+            "Stafford Rowley Park Stadium", "Stamford", "Stevenage Ridlins Wood", "Stirling University Track", "Stockport Woodbank Park", "Stockton-on-Tees", "Stoke-on-Trent Northwood Stadium",
+            "Stone", "Stornoway", "Stourbridge", "Stourport-on-Severn", "Stowmarket", "Stratford-upon-Avon", "Street", "Stretford Longford Park Stadium",
+            "Sunderland Silksworth Sports Complex", "Sutton-in-Ashfield", "Swansea University Track", "Swindon County Ground Athletics Track", "Tadcaster", "Tamworth", "Taunton",
+            "Telford", "Thetford", "Thornbury", "Thurrock", "Tipton", "Tonbridge", "Torfaen", "Torquay", "Totnes",
+            "Trafford", "Tullamore", "Turriff", "Tweedbank", "Uckfield", "Ulverston", "Upminster", "Wakefield",
+            "Wallasey", "Wallingford", "Wallsend", "Walsall", "Wantage", "Ware", "Warley", "Warminster", "Warrington", "Warwick",
+            "Watford", "Wath upon Dearne", "Wellingborough", "Wellington", "Wells", "Welwyn Garden City", "Westbury", "Weston-super-Mare", "Weymouth", "Whitby",
+            "Whitchurch", "Whitehaven", "Wick", "Widnes", "Wigan", "Wigton", "Wimborne", "Wincanton", "Winchester", "Windsor",
+            "Winsford", "Wisbech", "Wishaw", "Witham", "Witney", "Woking", "Wokingham", "Wolverhampton", "Wombourne", "Woodbridge", "Woodford Green",
+            "Worcester", "Workington", "Worksop", "Worthing", "Wrexham", "Wymondham", "Yeovil"
+        ].sort();
+
         function Icon({ name, size = 16, className = "" }) {
             const iconStyle = { width: size, height: size, strokeWidth: 2, stroke: 'currentColor', fill: 'none', strokeLinecap: 'round', strokeLinejoin: 'round' };
             const icons = {
@@ -93,175 +187,207 @@
         }
 
         function App() {
-          return (<SprintDashboard />);
+            return (<SprintDashboard />);
         }
 
         function LoadingScreen() { return <div className="flex flex-col items-center justify-center h-screen bg-gray-100"><LoadingSpinner /><p className="text-xl text-gray-500 mt-4">Loading Sprint Tracker...</p></div>; }
         function LoadingSpinner() { return <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>; }
 
         function SprintDashboard() {
-          const [sessions, setSessions] = useState([]);
-          const [activeSessionId, setActiveSessionId] = useState(null);
-          const [isLoading, setIsLoading] = useState(true);
-          const [view, setView] = useState('logger');
-          const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-          const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+            const [sessions, setSessions] = useState([]);
+            const [activeSessionId, setActiveSessionId] = useState(null);
+            const [isLoading, setIsLoading] = useState(true);
+            const [view, setView] = useState('logger');
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+            const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-          useEffect(() => {
-            try {
-              const localData = localStorage.getItem('sprintSessions');
-              const parsedData = localData ? JSON.parse(localData) : [];
-              setSessions(parsedData);
-              if (parsedData.length > 0 && !activeSessionId) {
-                  setActiveSessionId(parsedData[0].id);
-              }
-            } catch (e) { setSessions([]); }
-            setIsLoading(false);
-          }, []);
-          
-          useEffect(() => {
-              if (!isLoading) {
-                  localStorage.setItem('sprintSessions', JSON.stringify(sessions));
-              }
-          }, [sessions, isLoading]);
-          
-          const handleCreateSession = (name, date) => {
-            const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString() };
-            setSessions(prev => [newSession, ...prev].sort((a,b) => new Date(b.date) - new Date(a.date)));
-            setActiveSessionId(newSession.id);
-            setView('logger');
-            setIsCreateModalOpen(false);
-          };
+            useEffect(() => {
+                try {
+                    const localData = localStorage.getItem('sprintSessions');
+                    const parsedData = localData ? JSON.parse(localData) : [];
+                    setSessions(parsedData);
+                    if (parsedData.length > 0 && !activeSessionId) {
+                        setActiveSessionId(parsedData[0].id);
+                    }
+                } catch (e) { setSessions([]); }
+                setIsLoading(false);
+            }, []);
+            
+            useEffect(() => {
+                if (!isLoading) {
+                    localStorage.setItem('sprintSessions', JSON.stringify(sessions));
+                }
+            }, [sessions, isLoading]);
+            
+            const handleCreateSession = (name, date, track) => {
+                const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString(), track };
+                setSessions(prev => [newSession, ...prev].sort((a,b) => new Date(b.date) - new Date(a.date)));
+                setActiveSessionId(newSession.id);
+                setView('logger');
+                setIsCreateModalOpen(false);
+            };
 
-          const handleUpdateSession = (sessionId, updatedData) => {
-            setSessions(prev => prev.map(s => s.id === sessionId ? {...s, ...updatedData} : s));
-          };
+            const handleUpdateSession = (sessionId, updatedData) => {
+                setSessions(prev => prev.map(s => s.id === sessionId ? {...s, ...updatedData} : s));
+            };
 
-          const handleDeleteSession = (sessionId) => {
-            let nextActiveId = null;
-            const remainingSessions = sessions.filter(s => s.id !== sessionId);
-            if (activeSessionId === sessionId && remainingSessions.length > 0) {
-                 nextActiveId = remainingSessions[0].id;
+            const handleDeleteSession = (sessionId) => {
+                let nextActiveId = null;
+                const remainingSessions = sessions.filter(s => s.id !== sessionId);
+                if (activeSessionId === sessionId && remainingSessions.length > 0) {
+                    nextActiveId = remainingSessions[0].id;
+                }
+                setSessions(remainingSessions);
+                if(nextActiveId) {
+                    setActiveSessionId(nextActiveId);
+                } else if (remainingSessions.length === 0) {
+                    setActiveSessionId(null);
+                }
+            };
+
+            const handleAddSprint = (sprintData) => {
+                const session = sessions.find(s => s.id === activeSessionId);
+                if (!session) return;
+                const updatedSprints = [...(session.sprints || []), sprintData];
+                handleUpdateSession(activeSessionId, {sprints: updatedSprints});
+            };
+
+            const handleUpdateSprint = (sprintToUpdate) => {
+                const session = sessions.find(s => s.id === activeSessionId);
+                if (!session) return;
+                const updatedSprints = (session.sprints || []).map(s => s.id === sprintToUpdate.id ? sprintToUpdate : s);
+                handleUpdateSession(activeSessionId, { sprints: updatedSprints });
+            };
+            
+            const handleDeleteSprint = (sprintToDelete) => {
+                const session = sessions.find(s => s.id === activeSessionId);
+                if (!session) return;
+                const updatedSprints = (session.sprints || []).filter(s => s.id !== sprintToDelete.id);
+                handleUpdateSession(activeSessionId, { sprints: updatedSprints });
+            };
+
+            const handleSelectSession = (id) => { setActiveSessionId(id); setIsSidebarOpen(false); };
+            
+            const activeSession = sessions.find(s => s.id === activeSessionId);
+            const MainContent = () => {
+                switch(view) {
+                    case 'calendar': return <CalendarPage sessions={sessions} onSessionSelect={handleSelectSession} setView={setView} />;
+                    case 'logger':
+                    default: 
+                        return activeSession ? <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} sessions={sessions} /> : <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-2xl shadow-sm"><Icon name="logIn" size={48} className="text-blue-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2><p className="text-gray-500">Create or select a session to start.</p></div>;
+                }
             }
-            setSessions(remainingSessions);
-            if(nextActiveId) {
-                setActiveSessionId(nextActiveId);
-            } else if (remainingSessions.length === 0) {
-                 setActiveSessionId(null);
-            }
-          };
 
-          const handleAddSprint = (sprintData) => {
-             const session = sessions.find(s => s.id === activeSessionId);
-             if (!session) return;
-             const updatedSprints = [...(session.sprints || []), sprintData];
-             handleUpdateSession(activeSessionId, {sprints: updatedSprints});
-          };
+            if (isLoading) return <LoadingScreen />;
 
-          const handleUpdateSprint = (sprintToUpdate) => {
-            const session = sessions.find(s => s.id === activeSessionId);
-            if (!session) return;
-            const updatedSprints = (session.sprints || []).map(s => s.id === sprintToUpdate.id ? sprintToUpdate : s);
-            handleUpdateSession(activeSessionId, { sprints: updatedSprints });
-          };
-          
-          const handleDeleteSprint = (sprintToDelete) => {
-            const session = sessions.find(s => s.id === activeSessionId);
-            if (!session) return;
-            const updatedSprints = (session.sprints || []).filter(s => s.id !== sprintToDelete.id);
-            handleUpdateSession(activeSessionId, { sprints: updatedSprints });
-          };
+            return (
+                <div className="relative min-h-screen lg:flex">
+                    {isSidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+                    <aside className={`fixed top-0 left-0 h-full w-4/5 md:w-1/3 bg-gray-50/80 backdrop-blur-xl border-r border-gray-200 p-4 lg:p-6 flex flex-col scrollbar-thin transform transition-transform duration-300 ease-in-out z-20 lg:relative lg:w-1/3 lg:translate-x-0 lg:bg-gray-50 lg:border-r lg:border-gray-200 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-6">Sprint Tracker</h1>
+                        {isLoading ? <LoadingSpinner /> : <SessionList sessions={sessions} activeSessionId={activeSessionId} onSelectSession={handleSelectSession} onUpdate={handleUpdateSession} onDelete={handleDeleteSession} />}
+                    </aside>
 
-          const handleSelectSession = (id) => { setActiveSessionId(id); setIsSidebarOpen(false); };
-          
-          const activeSession = sessions.find(s => s.id === activeSessionId);
-          const MainContent = () => {
-              switch(view) {
-                  case 'calendar': return <CalendarPage sessions={sessions} onSessionSelect={handleSelectSession} setView={setView} />;
-                  case 'logger':
-                  default: 
-                    return activeSession ? <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} sessions={sessions} /> : <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-2xl shadow-sm"><Icon name="logIn" size={48} className="text-blue-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2><p className="text-gray-500">Create or select a session to start.</p></div>;
-              }
-          }
+                    <main className="flex-1 p-4 lg:p-8 overflow-y-auto scrollbar-thin bg-white pb-24 lg:pb-8">
+                        <header className="flex justify-between items-center mb-6 lg:hidden">
+                            <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200"><Icon name="menu" size={24} /></button>
+                                <h1 className="text-xl font-semibold text-gray-800">Sprint Tracker</h1>
+                            <div className="w-10"></div>
+                        </header>
+                        <MainContent />
+                    </main>
 
-          if (isLoading) return <LoadingScreen />;
-
-          return (
-            <div className="relative min-h-screen lg:flex">
-                {isSidebarOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
-                <aside className={`fixed top-0 left-0 h-full w-4/5 md:w-1/3 bg-gray-50/80 backdrop-blur-xl border-r border-gray-200 p-4 lg:p-6 flex flex-col scrollbar-thin transform transition-transform duration-300 ease-in-out z-20 lg:relative lg:w-1/3 lg:translate-x-0 lg:bg-gray-50 lg:border-r lg:border-gray-200 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-6">Sprint Tracker</h1>
-                    {isLoading ? <LoadingSpinner /> : <SessionList sessions={sessions} activeSessionId={activeSessionId} onSelectSession={handleSelectSession} onUpdate={handleUpdateSession} onDelete={handleDeleteSession} />}
-                </aside>
-
-                <main className="flex-1 p-4 lg:p-8 overflow-y-auto scrollbar-thin bg-white pb-24 lg:pb-8">
-                    <header className="flex justify-between items-center mb-6 lg:hidden">
-                        <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200"><Icon name="menu" size={24} /></button>
-                         <h1 className="text-xl font-semibold text-gray-800">Sprint Tracker</h1>
-                        <div className="w-10"></div>
-                    </header>
-                    <MainContent />
-                </main>
-
-                <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 lg:hidden">
-                    <nav className="flex justify-around items-center h-16">
-                         <div className="w-1/3 flex justify-center">
-                            <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
-                                <Icon name="timer" size={24}/>
-                                <span className="text-xs font-semibold">Logger</span>
-                            </button>
-                         </div>
-                         <div className="w-1/3 flex justify-center">
-                             <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg -mt-8 border-4 border-white">
+                    <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 lg:hidden">
+                        <nav className="flex justify-around items-center h-16">
+                                <div className="w-1/3 flex justify-center">
+                                    <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                        <Icon name="timer" size={24}/>
+                                        <span className="text-xs font-semibold">Logger</span>
+                                    </button>
+                                </div>
+                                <div className="w-1/3 flex justify-center">
+                                    <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg -mt-8 border-4 border-white">
+                                        <Icon name="plus" size={32}/>
+                                    </button>
+                                </div>
+                                <div className="w-1/3 flex justify-center">
+                                    <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                        <Icon name="calendar" size={24}/>
+                                        <span className="text-xs font-semibold">Calendar</span>
+                                    </button>
+                                </div>
+                        </nav>
+                    </footer>
+                    
+                    <div className="hidden lg:block fixed bottom-8 right-8">
+                            <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg">
                                 <Icon name="plus" size={32}/>
                             </button>
-                         </div>
-                          <div className="w-1/3 flex justify-center">
-                            <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
-                                <Icon name="calendar" size={24}/>
-                                <span className="text-xs font-semibold">Calendar</span>
-                            </button>
-                          </div>
-                    </nav>
-                </footer>
-                
-                <div className="hidden lg:block fixed bottom-8 right-8">
-                     <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg">
-                        <Icon name="plus" size={32}/>
-                    </button>
-                </div>
+                    </div>
 
-                {isCreateModalOpen && <SessionCreatorModal onCreateSession={handleCreateSession} onClose={() => setIsCreateModalOpen(false)} />}
-            </div>
-          );
+                    {isCreateModalOpen && <SessionCreatorModal onCreateSession={handleCreateSession} onClose={() => setIsCreateModalOpen(false)} />}
+                </div>
+            );
         }
 
         function SessionCreatorModal({ onCreateSession, onClose }) {
-          const [name, setName] = useState('');
-          const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+            const [name, setName] = useState('');
+            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+            const [track, setTrack] = useState('');
+            const [mapUrl, setMapUrl] = useState('');
 
-          const handleSubmit = (e) => { e.preventDefault(); if(name.trim()){ onCreateSession(name.trim(), date); }};
-          return (<div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 w-full max-w-md">
-                <form onSubmit={handleSubmit}>
-                    <h3 className="text-xl font-bold mb-4 text-gray-900">Create New Session</h3>
-                    <div className="space-y-4">
-                        <div>
-                           <label htmlFor="session-name" className="block text-sm font-medium text-gray-700 mb-1">Session Name</label>
-                           <input id="session-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Velocity Day" className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            const handleTrackChange = (selectedTrack) => {
+                setTrack(selectedTrack);
+                if (selectedTrack) {
+                    const encodedTrack = encodeURIComponent(selectedTrack + ', UK');
+                    setMapUrl(`https://maps.google.com/maps?q=${encodedTrack}&t=&z=13&ie=UTF8&iwloc=&output=embed`);
+                } else {
+                    setMapUrl('');
+                }
+            }
+
+            const handleSubmit = (e) => { e.preventDefault(); if(name.trim()){ onCreateSession(name.trim(), date, track); }};
+            
+            return (<div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-6 w-full max-w-md">
+                    <form onSubmit={handleSubmit}>
+                        <h3 className="text-xl font-bold mb-4 text-gray-900">Create New Session</h3>
+                        <div className="space-y-4">
+                            <div>
+                               <label htmlFor="session-name" className="block text-sm font-medium text-gray-700 mb-1">Session Name</label>
+                               <input id="session-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Velocity Day" className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                            </div>
+                            <div>
+                               <label htmlFor="session-date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                               <input id="session-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                            </div>
+                             <div>
+                               <label htmlFor="session-track" className="block text-sm font-medium text-gray-700 mb-1">Track (Optional)</label>
+                               <select id="session-track" value={track} onChange={(e) => handleTrackChange(e.target.value)} className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                 <option value="">Select a track</option>
+                                 {ukAthleticTracks.map(trackName => <option key={trackName} value={trackName}>{trackName}</option>)}
+                               </select>
+                            </div>
+                            {mapUrl && (
+                                <div className="mt-4">
+                                    <iframe
+                                        width="100%"
+                                        height="200"
+                                        frameBorder="0"
+                                        style={{ border: 0, borderRadius: '0.75rem' }}
+                                        src={mapUrl}
+                                        allowFullScreen="">
+                                    </iframe>
+                                </div>
+                            )}
                         </div>
-                         <div>
-                           <label htmlFor="session-date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                           <input id="session-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-gray-100 text-gray-900 p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                        <div className="flex justify-end space-x-4 mt-6">
+                            <button type="button" onClick={onClose} className="px-6 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 transition text-gray-800">Cancel</button>
+                            <button type="submit" className="px-6 py-2 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 transition text-white">Create</button>
                         </div>
-                    </div>
-                    <div className="flex justify-end space-x-4 mt-6">
-                        <button type="button" onClick={onClose} className="px-6 py-2 rounded-lg font-semibold bg-gray-200 hover:bg-gray-300 transition text-gray-800">Cancel</button>
-                        <button type="submit" className="px-6 py-2 rounded-lg font-semibold bg-blue-600 hover:bg-blue-700 transition text-white">Create</button>
-                    </div>
-                </form>
-            </div>
-          </div>);
+                    </form>
+                </div>
+            </div>);
         }
 
         function SessionList({ sessions, activeSessionId, onSelectSession, onUpdate, onDelete}) {
@@ -305,7 +431,7 @@
                                 ))}
                             </ul>
                         ) : (
-                             <p className="text-gray-500 text-center py-8">No sessions on this day.</p>
+                            <p className="text-gray-500 text-center py-8">No sessions on this day.</p>
                         )}
                     </div>
                 </div>
@@ -342,72 +468,120 @@
         }
 
         function SprintLogger({ session, sessions, onAddSprint, onUpdateSprint, onDeleteSprint }) {
-          const [distance, setDistance] = useState(100);
-          const [time, setTime] = useState('');
-          const [startType, setStartType] = useState('Standing');
-          
-          const handleSubmit = (e) => { 
-              e.preventDefault(); 
-              const timeValue = parseFloat(time); 
-              if (!isNaN(timeValue) && timeValue > 0) { 
-                  onAddSprint({ id: Date.now(), distance: Number(distance), time: timeValue, startType: startType }); 
-                  setTime(''); 
-              } 
-          };
-          return (
-            <div className="bg-white p-4 sm:p-6 rounded-2xl">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900">{session.name}</h2>
-              <p className="text-sm text-gray-500 mb-8">Date: {new Date(session.date).toLocaleDateString()}</p>
-              <form onSubmit={handleSubmit} className="mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl"><div className="grid md:grid-cols-2 gap-6 items-center"><div><label htmlFor="distance" className="block text-lg font-medium mb-2 text-gray-700">Distance: <span className="font-bold text-blue-600">{distance}m</span></label><input id="distance" type="range" min="20" max="400" step="10" value={distance} onChange={(e) => setDistance(e.target.value)} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-thumb"/></div><div className="flex items-end space-x-4"><div className="flex-grow"><label htmlFor="time" className="block text-lg font-medium mb-2 text-gray-700">Time (s)</label><input id="time" type="number" step="0.01" value={time} onChange={(e) => setTime(e.target.value)} placeholder="e.g., 12.54" className="w-full bg-white text-gray-900 p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none" required/></div><button type="submit" className="h-[52px] px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition flex items-center justify-center"><Icon name="plus" size={24} /></button></div></div>
-                   <div className="mt-4">
-                        <span className="block text-lg font-medium mb-2 text-gray-700">Start Type</span>
-                        <div className="flex items-center space-x-6">
-                           <label className="flex items-center space-x-2 cursor-pointer">
-                                <input type="radio" name="startType" value="Standing" checked={startType === 'Standing'} onChange={() => setStartType('Standing')} className="form-radio h-4 w-4 text-blue-600"/>
-                                <span className="text-gray-700">Standing</span>
-                           </label>
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input type="radio" name="startType" value="Rolling" checked={startType === 'Rolling'} onChange={() => setStartType('Rolling')} className="form-radio h-4 w-4 text-blue-600"/>
-                                <span className="text-gray-700">Rolling</span>
-                           </label>
+            const [distance, setDistance] = useState(100);
+            const [time, setTime] = useState('');
+            const [startType, setStartType] = useState('Standing');
+            const [rest, setRest] = useState('');
+            
+            const handleSubmit = (e) => { 
+                e.preventDefault(); 
+                const timeValue = parseFloat(time); 
+                const restValue = parseInt(rest, 10);
+                if (!isNaN(timeValue) && timeValue > 0) { 
+                    onAddSprint({ id: Date.now(), distance: Number(distance), time: timeValue, startType: startType, rest: isNaN(restValue) ? 0 : restValue }); 
+                    setTime(''); 
+                    setRest('');
+                } 
+            };
+            return (
+                <div className="bg-white p-4 sm:p-6 rounded-2xl">
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900">{session.name}</h2>
+                    <p className="text-sm text-gray-500 mb-1">Date: {new Date(session.date).toLocaleDateString()}</p>
+                    {session.track && <p className="text-sm text-gray-500 mb-8">Track: {session.track}</p>}
+                    {!session.track && <div className="mb-8"></div>}
+
+                    <form onSubmit={handleSubmit} className="mb-8 p-4 sm:p-6 bg-gray-50 rounded-xl">
+                        <div className="grid md:grid-cols-2 gap-6 items-center">
+                            <div>
+                                <label htmlFor="distance" className="block text-lg font-medium mb-2 text-gray-700">Distance: <span className="font-bold text-blue-600">{distance}m</span></label>
+                                <input id="distance" type="range" min="20" max="400" step="10" value={distance} onChange={(e) => setDistance(e.target.value)} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-thumb"/>
+                            </div>
+                            <div className="flex items-end space-x-2">
+                                <div className="flex-grow">
+                                    <label htmlFor="time" className="block text-lg font-medium mb-2 text-gray-700">Time (s)</label>
+                                    <input id="time" type="number" step="0.01" value={time} onChange={(e) => setTime(e.target.value)} placeholder="e.g., 12.54" className="w-full bg-white text-gray-900 p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none" required/>
+                                </div>
+                                <div className="flex-grow">
+                                    <label htmlFor="rest" className="block text-lg font-medium mb-2 text-gray-700">Rest (min)</label>
+                                    <input id="rest" type="number" value={rest} onChange={(e) => setRest(e.target.value)} placeholder="e.g., 5" className="w-full bg-white text-gray-900 p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none" />
+                                </div>
+                                <button type="submit" className="h-[52px] px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition flex items-center justify-center self-end"><Icon name="plus" size={24} /></button>
+                            </div>
                         </div>
-                    </div>
-              </form>
-              <div><h3 className="text-xl font-bold mb-4 text-gray-800">Logged Sprints</h3><div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin">{(session.sprints || []).length > 0 ? <ul className="space-y-3">{[...session.sprints].sort((a,b) => b.id - a.id).map(sprint => <SprintListItem key={sprint.id} sprint={sprint} onUpdate={onUpdateSprint} onDelete={onDeleteSprint} />)}</ul> : <p className="text-gray-500 text-center py-4">No sprints logged yet.</p>}</div></div>
-              <PersonalBests sessions={sessions} />
-            </div>
-          );
+                        <div className="mt-4">
+                            <span className="block text-lg font-medium mb-2 text-gray-700">Start Type</span>
+                            <div className="flex items-center space-x-6">
+                               <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="startType" value="Standing" checked={startType === 'Standing'} onChange={() => setStartType('Standing')} className="form-radio h-4 w-4 text-blue-600"/>
+                                    <span className="text-gray-700">Standing</span>
+                               </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" name="startType" value="Rolling" checked={startType === 'Rolling'} onChange={() => setStartType('Rolling')} className="form-radio h-4 w-4 text-blue-600"/>
+                                    <span className="text-gray-700">Rolling</span>
+                               </label>
+                            </div>
+                        </div>
+                    </form>
+                    <div><h3 className="text-xl font-bold mb-4 text-gray-800">Logged Sprints</h3><div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin">{(session.sprints || []).length > 0 ? <ul className="space-y-3">{[...session.sprints].sort((a,b) => b.id - a.id).map(sprint => <SprintListItem key={sprint.id} sprint={sprint} onUpdate={onUpdateSprint} onDelete={onDeleteSprint} />)}</ul> : <p className="text-gray-500 text-center py-4">No sprints logged yet.</p>}</div></div>
+                    <PersonalBests sessions={sessions} />
+                </div>
+            );
         }
 
         function SprintListItem({ sprint, onUpdate, onDelete }) {
             const [isEditing, setIsEditing] = useState(false);
             const [confirmDelete, setConfirmDelete] = useState(false);
-            const [editData, setEditData] = useState({ distance: sprint.distance, time: sprint.time, startType: sprint.startType || 'Standing' });
-            const handleSave = () => { const dist = parseInt(editData.distance, 10); const time = parseFloat(editData.time); if (!isNaN(dist) && !isNaN(time) && dist > 0 && time > 0) { onUpdate({ ...sprint, distance: dist, time: time, startType: editData.startType }); setIsEditing(false); } };
+            const [editData, setEditData] = useState({ distance: sprint.distance, time: sprint.time, startType: sprint.startType || 'Standing', rest: sprint.rest || '' });
+            
+            const handleSave = () => { 
+                const dist = parseInt(editData.distance, 10); 
+                const time = parseFloat(editData.time); 
+                const rest = parseInt(editData.rest, 10);
+                if (!isNaN(dist) && !isNaN(time) && dist > 0 && time > 0) { 
+                    onUpdate({ ...sprint, distance: dist, time: time, startType: editData.startType, rest: isNaN(rest) ? 0 : rest }); 
+                    setIsEditing(false); 
+                } 
+            };
+
             if (isEditing) { 
                 return (
                     <li className="bg-blue-50 p-3 rounded-lg space-y-3">
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2"><input type="number" value={editData.distance} onChange={e => setEditData({...editData, distance: e.target.value})} className="w-20 bg-white p-1 rounded border border-gray-300"/><span>m</span></div>
-                            <div className="flex items-center gap-2"><input type="number" step="0.01" value={editData.time} onChange={e => setEditData({...editData, time: e.target.value})} className="w-24 bg-white p-1 rounded border border-gray-300"/><span>s</span></div>
+                        <div className="flex justify-between items-center gap-2">
+                           <div className="flex items-center gap-2 flex-grow"><input type="number" value={editData.distance} onChange={e => setEditData({...editData, distance: e.target.value})} className="w-full bg-white p-1 rounded border border-gray-300"/><span>m</span></div>
+                           <div className="flex items-center gap-2 flex-grow"><input type="number" step="0.01" value={editData.time} onChange={e => setEditData({...editData, time: e.target.value})} className="w-full bg-white p-1 rounded border border-gray-300"/><span>s</span></div>
+                           <div className="flex items-center gap-2 flex-grow"><input type="number" value={editData.rest} onChange={e => setEditData({...editData, rest: e.target.value})} className="w-full bg-white p-1 rounded border border-gray-300"/><span>min</span></div>
                         </div>
                          <div className="flex justify-between items-center">
                             <div className="flex items-center space-x-4 text-sm">
-                               <label className="flex items-center space-x-1 cursor-pointer">
+                                <label className="flex items-center space-x-1 cursor-pointer">
                                     <input type="radio" name={`startType-${sprint.id}`} value="Standing" checked={editData.startType === 'Standing'} onChange={e => setEditData({...editData, startType: e.target.value})} className="form-radio h-4 w-4 text-blue-600"/>
                                     <span>S</span>
-                               </label>
+                                </label>
                                 <label className="flex items-center space-x-1 cursor-pointer">
                                     <input type="radio" name={`startType-${sprint.id}`} value="Rolling" checked={editData.startType === 'Rolling'} onChange={e => setEditData({...editData, startType: e.target.value})} className="form-radio h-4 w-4 text-blue-600"/>
                                     <span>R</span>
-                               </label>
+                                </label>
                             </div>
                             <div className="flex gap-2"><button onClick={handleSave} className="p-1 hover:text-green-500"><Icon name="save" size={16}/></button><button onClick={() => setIsEditing(false)} className="p-1 hover:text-red-500"><Icon name="x" size={16}/></button></div>
                         </div>
                     </li>
                 ); 
             }
-            return (<li className="group flex justify-between items-center bg-white p-4 rounded-xl transition-all border border-gray-200"><p className="font-semibold text-gray-800">{sprint.distance}m</p><div className="flex items-center gap-4"><span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{sprint.startType || 'Standing'}</span><p className="text-blue-600 text-lg font-mono">{sprint.time.toFixed(2)}s</p></div><div className="flex opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={() => setIsEditing(true)} className="p-1 hover:text-gray-900"><Icon name="edit" size={16}/></button><button onClick={() => setConfirmDelete(true)} className="p-1 hover:text-red-500"><Icon name="trash2" size={16}/></button></div>{confirmDelete && <ConfirmationModal title="Delete Sprint?" message={`Permanently delete the ${sprint.distance}m sprint?`} onConfirm={() => onDelete(sprint)} onCancel={() => setConfirmDelete(false)} />}</li>);
+            return (<li className="group flex justify-between items-center bg-white p-4 rounded-xl transition-all border border-gray-200">
+                <div className="flex flex-col">
+                    <p className="font-semibold text-gray-800">{sprint.distance}m</p>
+                    {sprint.rest > 0 && <p className="text-xs text-gray-500">{sprint.rest} min rest</p>}
+                </div>
+                <div className="flex items-center gap-4">
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{sprint.startType || 'Standing'}</span>
+                    <p className="text-blue-600 text-lg font-mono">{sprint.time.toFixed(2)}s</p>
+                </div>
+                <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => setIsEditing(true)} className="p-1 hover:text-gray-900"><Icon name="edit" size={16}/></button>
+                    <button onClick={() => setConfirmDelete(true)} className="p-1 hover:text-red-500"><Icon name="trash2" size={16}/></button>
+                </div>
+                {confirmDelete && <ConfirmationModal title="Delete Sprint?" message={`Permanently delete the ${sprint.distance}m sprint?`} onConfirm={() => onDelete(sprint)} onCancel={() => setConfirmDelete(false)} />}
+            </li>);
         }
 
         function PersonalBests({ sessions }) {
@@ -430,10 +604,10 @@
                     <h3 className="text-xl font-bold mb-4 text-gray-800">Personal Bests</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {personalBests.map(pb => (
-                             <div key={pb.id} className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl">
-                                 <p className="font-semibold text-yellow-800">{pb.distance}m ({pb.startType})</p>
-                                 <p className="text-2xl font-bold text-yellow-900">{pb.time.toFixed(2)}s</p>
-                             </div>
+                                <div key={pb.id} className="bg-yellow-50 border border-yellow-200 p-4 rounded-xl">
+                                    <p className="font-semibold text-yellow-800">{pb.distance}m ({pb.startType})</p>
+                                    <p className="text-2xl font-bold text-yellow-900">{pb.time.toFixed(2)}s</p>
+                                </div>
                         ))}
                     </div>
                 </div>
