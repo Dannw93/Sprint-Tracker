@@ -233,7 +233,7 @@
             }, [sessions, isLoading]);
             
             const handleCreateSession = (name, date, track, weather) => {
-                const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString(), track, weather };
+                const newSession = { name, date: new Date(date).toISOString(), sprints: [], id: Date.now().toString(), track, weather, notes: "" };
                 setSessions(prev => [newSession, ...prev].sort((a,b) => new Date(b.date) - new Date(a.date)));
                 setActiveSessionId(newSession.id);
                 setView('logger');
@@ -287,7 +287,7 @@
                     case 'calendar': return <CalendarPage sessions={sessions} onSessionSelect={handleSelectSession} setView={setView} />;
                     case 'logger':
                     default: 
-                        return activeSession ? <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} sessions={sessions} /> : <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-2xl shadow-sm"><Icon name="logIn" size={48} className="text-blue-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2><p className="text-gray-500">Create or select a session to start.</p></div>;
+                        return activeSession ? <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} onUpdateSession={handleUpdateSession} /> : <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-white rounded-2xl shadow-sm"><Icon name="logIn" size={48} className="text-blue-500 mb-4" /><h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2><p className="text-gray-500">Create or select a session to start.</p></div>;
                 }
             }
 
@@ -311,28 +311,24 @@
                     </main>
 
                     <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 lg:hidden">
-                        <nav className="flex justify-around items-center h-16">
-                                <div className="w-1/3 flex justify-center">
-                                    <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
-                                        <Icon name="timer" size={24}/>
-                                        <span className="text-xs font-semibold">Logger</span>
-                                    </button>
-                                </div>
+                         <nav className="flex justify-around items-center h-16">
+                                <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 w-1/3 ${view === 'logger' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                    <Icon name="timer" size={24}/>
+                                    <span className="text-xs font-semibold">Logger</span>
+                                </button>
                                 <div className="w-1/3 flex justify-center">
                                     <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg -mt-8 border-4 border-white">
                                         <Icon name="plus" size={32}/>
                                     </button>
                                 </div>
-                                <div className="w-1/3 flex justify-center">
-                                    <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
-                                        <Icon name="calendar" size={24}/>
-                                        <span className="text-xs font-semibold">Calendar</span>
-                                    </button>
-                                </div>
+                                <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 w-1/3 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                    <Icon name="calendar" size={24}/>
+                                    <span className="text-xs font-semibold">Calendar</span>
+                                </button>
                         </nav>
                     </footer>
                     
-                    <div className="hidden lg:block fixed bottom-8 right-8">
+                    <div className="hidden lg:flex fixed bottom-8 right-8 space-x-4">
                             <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg">
                                 <Icon name="plus" size={32}/>
                             </button>
@@ -512,12 +508,21 @@
             );
         }
 
-        function SprintLogger({ session, sessions, onAddSprint, onUpdateSprint, onDeleteSprint }) {
+        function SprintLogger({ session, sessions, onAddSprint, onUpdateSprint, onDeleteSprint, onUpdateSession }) {
             const [distance, setDistance] = useState(100);
             const [time, setTime] = useState('');
             const [startType, setStartType] = useState('Standing');
             const [rest, setRest] = useState('');
+            const [notes, setNotes] = useState(session.notes || '');
+
+            useEffect(() => {
+                setNotes(session.notes || '');
+            }, [session.id, session.notes]);
             
+            const handleNotesBlur = () => {
+                onUpdateSession(session.id, { notes: notes });
+            };
+
             const handleSubmit = (e) => { 
                 e.preventDefault(); 
                 const timeValue = parseFloat(time); 
@@ -569,6 +574,19 @@
                             </div>
                         </div>
                     </form>
+
+                    <div className="mb-8">
+                        <h3 className="text-xl font-bold mb-4 text-gray-800">Session Notes</h3>
+                        <textarea 
+                            value={notes} 
+                            onChange={(e) => setNotes(e.target.value)}
+                            onBlur={handleNotesBlur}
+                            placeholder="Add notes about this session..."
+                            className="w-full bg-gray-50 text-gray-900 p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
                     <div><h3 className="text-xl font-bold mb-4 text-gray-800">Logged Sprints</h3><div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin">{(session.sprints || []).length > 0 ? <ul className="space-y-3">{[...session.sprints].sort((a,b) => b.id - a.id).map(sprint => <SprintListItem key={sprint.id} sprint={sprint} onUpdate={onUpdateSprint} onDelete={onDeleteSprint} />)}</ul> : <p className="text-gray-500 text-center py-4">No sprints logged yet.</p>}</div></div>
                     <PersonalBests sessions={sessions} />
                 </div>
@@ -633,6 +651,7 @@
 
         function PersonalBests({ sessions }) {
             const personalBests = useMemo(() => {
+                if (!sessions) return []; // Add a guard clause
                 const allSprints = sessions.flatMap(s => s.sprints || []);
                 const bests = {};
                 allSprints.forEach(sprint => {
