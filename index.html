@@ -69,7 +69,8 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
-        
+        const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, ZAxis } = window.Recharts || {};
+
         // A list of UK athletic tracks with coordinates for the weather API.
         const ukAthleticTracks = [
             { name: "Abingdon Tilsley Park Track", latitude: 51.682, longitude: -1.294 },
@@ -196,6 +197,7 @@
                 alertTriangle: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>,
                 chevronLeft: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><polyline points="15 18 9 12 15 6"></polyline></svg>,
                 chevronRight: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><polyline points="9 18 15 12 9 6"></polyline></svg>,
+                award: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style={iconStyle}><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
             };
             return <span className={className}>{icons[name]}</span>;
         }
@@ -309,10 +311,12 @@
                         return <HomePage sessions={sessions} onGoToSession={handleGoToSession} setView={setView} setIsCreateModalOpen={setIsCreateModalOpen} />;
                     case 'calendar': 
                         return <CalendarPage sessions={sessions} onSessionSelect={handleGoToSession} setView={setView} />;
+                    case 'bests':
+                        return <PersonalBestsPage sessions={sessions} />
                     case 'logger':
                     default: 
                         if (activeSession) {
-                           return <SprintLogger session={activeSession} sessions={sessions} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} onUpdateSession={handleUpdateSession} />
+                           return <SprintLogger session={activeSession} onAddSprint={handleAddSprint} onUpdateSprint={handleUpdateSprint} onDeleteSprint={handleDeleteSprint} onUpdateSession={handleUpdateSession} />
                         }
                         return <HomePage sessions={sessions} onGoToSession={handleGoToSession} setView={setView} setIsCreateModalOpen={setIsCreateModalOpen} />;
                 }
@@ -352,19 +356,24 @@
 
                     <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 lg:hidden">
                          <nav className="flex justify-around items-center h-16">
-                                <button onClick={() => setView('home')} className={`flex flex-col items-center justify-center space-y-1 w-1/4 ${view === 'home' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                <button onClick={() => setView('home')} className={`flex flex-col items-center justify-center space-y-1 w-1/5 ${view === 'home' ? 'text-blue-600' : 'text-gray-500'}`}>
                                     <Icon name="home" size={24}/>
                                     <span className="text-xs font-semibold">Home</span>
                                 </button>
-                                <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 w-1/4 ${view === 'logger' && activeSessionId ? 'text-blue-600' : 'text-gray-500'}`} disabled={!activeSessionId}>
+                                <button onClick={() => setView('logger')} className={`flex flex-col items-center justify-center space-y-1 w-1/5 ${view === 'logger' && activeSessionId ? 'text-blue-600' : 'text-gray-500'}`} disabled={!activeSessionId}>
                                     <Icon name="timer" size={24}/>
                                     <span className="text-xs font-semibold">Logger</span>
                                 </button>
-                                <button onClick={() => setIsCreateModalOpen(true)} className={`flex flex-col items-center justify-center space-y-1 w-1/4 text-gray-500`}>
-                                     <Icon name="plus" size={24}/>
-                                     <span className="text-xs font-semibold">New</span>
+                                <div className="w-1/5 flex justify-center">
+                                    <button onClick={() => setIsCreateModalOpen(true)} className="bg-blue-600 text-white rounded-full h-16 w-16 flex items-center justify-center shadow-lg -mt-8 border-4 border-white">
+                                        <Icon name="plus" size={32}/>
+                                    </button>
+                                </div>
+                                <button onClick={() => setView('bests')} className={`flex flex-col items-center justify-center space-y-1 w-1/5 ${view === 'bests' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                    <Icon name="award" size={24}/>
+                                    <span className="text-xs font-semibold">Bests</span>
                                 </button>
-                                <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 w-1/4 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                <button onClick={() => setView('calendar')} className={`flex flex-col items-center justify-center space-y-1 w-1/5 ${view === 'calendar' ? 'text-blue-600' : 'text-gray-500'}`}>
                                     <Icon name="calendar" size={24}/>
                                     <span className="text-xs font-semibold">Calendar</span>
                                 </button>
@@ -422,9 +431,17 @@
                             )}
                         </div>
                     </div>
-                     <PersonalBests sessions={sessions} />
                 </div>
             );
+        }
+
+        function PersonalBestsPage({ sessions }) {
+            return (
+                 <div className="bg-white p-4 sm:p-6 rounded-2xl">
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-900">Personal Bests</h2>
+                     <PersonalBests sessions={sessions} />
+                </div>
+            )
         }
 
 
@@ -722,7 +739,6 @@
                     </div>
 
                     <div><h3 className="text-xl font-bold mb-4 text-gray-800">Logged Sprints</h3><div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin">{(session.sprints || []).length > 0 ? <ul className="space-y-3">{[...session.sprints].sort((a,b) => b.id - a.id).map(sprint => <SprintListItem key={sprint.id} sprint={sprint} onUpdate={onUpdateSprint} onDelete={onDeleteSprint} />)}</ul> : <p className="text-gray-500 text-center py-4">No sprints logged yet.</p>}</div></div>
-                    <PersonalBests sessions={sessions} />
                 </div>
             );
         }
